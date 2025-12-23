@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
 import Software from "@/lib/models/Software";
 import { uploadImage, deleteImage } from "@/lib/cloudinary";
 import fs from "fs";

@@ -1,27 +1,14 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from 'mongoose'
 
-const SoftwareSchema = new Schema(
+const SoftwareSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    description: { type: String, required: true },
-
-    image: {
-      url: { type: String },
-      publicId: { type: String },
-    },
-
-    status: {
-      type: String,
-      enum: ["upcoming", "live"],
-      default: "upcoming",
-    },
-
-    link: { type: String },
+    description: String,
+    downloadUrl: String,
+    image: String,
   },
   { timestamps: true }
-);
+)
 
-const Software =
-  models.Software || model("Software", SoftwareSchema);
-
-export default Software;
+export default mongoose.models.Software ||
+  mongoose.model('Software', SoftwareSchema)

@@ -1,21 +1,40 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const ServiceSchema = new Schema(
+const ServiceSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+    },
+
+    icon: {
+      type: String,
+      default: "",
+    },
 
     image: {
       url: { type: String },
       publicId: { type: String },
     },
 
-    isActive: { type: Boolean, default: true },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    order: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
-const Service =
-  models.Service || model("Service", ServiceSchema);
-
-export default Service;
+export default mongoose.models.Service ||
+  mongoose.model("Service", ServiceSchema);

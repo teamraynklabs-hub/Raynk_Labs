@@ -1,29 +1,16 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from 'mongoose'
 
-const ProjectSchema = new Schema(
+const ProjectSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-
-    image: {
-      url: { type: String },
-      publicId: { type: String},
-    },
-
-    techStack: [{ type: String }],
-
-    projectType: {
-      type: String,
-      enum: ["completed", "ongoing"],
-      default: "completed",
-    },
-
-    link: { type: String },
+    name: { type: String, required: true },
+    description: String,
+    techStack: [String],
+    url: String,
+    status: { type: String, enum: ['Live', 'Coming Soon'], default: 'Live' },
+    order: Number,
   },
   { timestamps: true }
-);
+)
 
-const Project =
-  models.Project || model("Project", ProjectSchema);
-
-export default Project;
+export default mongoose.models.Project ||
+  mongoose.model('Project', ProjectSchema)

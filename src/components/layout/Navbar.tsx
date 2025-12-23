@@ -17,6 +17,8 @@ import {
   Menu,
   X,
 } from 'lucide-react'
+import { ModeToggle } from '../theme/mode-toggle'
+
 
 /* ================= SIDE DOCK (HOME SECTIONS) ================= */
 const sideLinks = [
@@ -90,16 +92,17 @@ export default function Navigation() {
       <motion.nav
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed inset-x-0 top-0 z-50 h-16 bg-background/85 backdrop-blur border-b border-border"
+        className="fixed inset-x-0 top-0 z-50 h-16 bg-background backdrop-blur border-b border-border"
       >
-        <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
+        <div className="mx-auto flex h-full max-w-8xl items-center justify-between px-10">
           {/* LOGO */}
           <Link href="/">
-            <Image
+            <Image 
+              
               src="/images/logos.png"
               alt="RaYnk Labs"
-              width={130}
-              height={36}
+              width={95}
+              height={20}
               priority
             />
           </Link>
@@ -116,6 +119,7 @@ export default function Navigation() {
                 <span className="absolute -bottom-2 left-0 h-[2px] w-full bg-primary rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
               </Link>
             ))}
+            <ModeToggle />
           </div>
 
           {/* MOBILE MENU BUTTON */}
@@ -147,6 +151,7 @@ export default function Navigation() {
                     {link.label}
                   </Link>
                 ))}
+            <ModeToggle />
               </div>
             </motion.div>
           )}
@@ -195,6 +200,7 @@ export default function Navigation() {
               })}
             </div>
           </motion.div>
+          
         )}
       </AnimatePresence>
     </>

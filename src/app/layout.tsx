@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   title: 'RaYnk Labs — Learn • Earn • Grow • Innovate',
   description: 'A student-led innovation lab building tools, education, and opportunities for youth.',
   keywords: 'student innovation, tech education, career guidance, web development, AI tools',
-  // icons: {
-  //   icon: "/images/RaYnkLabs.svg",
-  // },
+  icons: {
+    icon: "/images/logos.png",
+  },
   authors: [{ name: 'RaYnk Labs Team' }],
   openGraph: {
     title: 'RaYnk Labs — Learn • Earn • Grow • Innovate',

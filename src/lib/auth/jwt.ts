@@ -1,27 +1,39 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken'
 
+/* =========================
+   TYPES
+========================= */
 export interface AdminJWTPayload {
-  adminId: string;
-  email: string;
-  role: string;
+  adminId: string
+  email: string
+  role: 'admin'
 }
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+/* =========================
+   SECRET
+========================= */
+const JWT_SECRET = process.env.JWT_SECRET
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined");
+  throw new Error('JWT_SECRET is not defined')
 }
 
+/* =========================
+   SIGN TOKEN
+========================= */
 export function signJWT(payload: AdminJWTPayload) {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: "7d",
-  });
+    expiresIn: '7d',
+  })
 }
 
+/* =========================
+   VERIFY TOKEN
+========================= */
 export function verifyJWT(token: string): AdminJWTPayload {
   try {
-    return jwt.verify(token, JWT_SECRET) as AdminJWTPayload;
-  } catch {
-    throw new Error("Invalid or expired token");
+    return jwt.verify(token, JWT_SECRET) as AdminJWTPayload
+  } catch (error) {
+    throw new Error('Invalid or expired token')
   }
 }

@@ -1,24 +1,52 @@
-import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const CourseSchema = new Schema(
+const CourseSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+    },
+
+    duration: {
+      type: String,
+      default: "",
+    },
+
+    level: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+      default: "Beginner",
+    },
+
+    badge: {
+      type: String,
+      enum: ["Free", "Paid", "Popular"],
+      default: "Free",
+    },
 
     image: {
       url: { type: String },
       publicId: { type: String },
     },
 
-    duration: { type: String },
-    level: { type: String },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
 
-    isActive: { type: Boolean, default: true },
+    order: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
-const Course =
-  models.Course || model("Course", CourseSchema);
-
-export default Course;
+export default mongoose.models.Course ||
+  mongoose.model("Course", CourseSchema);

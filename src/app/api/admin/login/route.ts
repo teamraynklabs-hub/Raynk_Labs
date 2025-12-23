@@ -1,81 +1,81 @@
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/db";
-import Admin from "@/lib/models/Admin";
-import { signJWT } from "@/lib/auth/jwt";
+import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { connectDB } from '@/lib/mongodb'
+import Admin from '@/lib/models/Admin'
+import { signJWT } from '@/lib/auth/jwt'
 
 export async function POST(request: Request) {
   try {
-    await connectDB();
+    await connectDB()
 
-    const { email, password } = await request.json();
+    const { email, password } = await request.json()
 
-    /* -------------------------
-       Basic Validation
-    -------------------------- */
+    /* =========================
+       VALIDATION
+    ========================= */
     if (!email || !password) {
       return NextResponse.json(
-        { message: "Email and password are required" },
+        { message: 'Email and password are required' },
         { status: 400 }
-      );
+      )
     }
 
-    /* -------------------------
-       Find Admin
-    -------------------------- */
-    const admin = await Admin.findOne({ email });
+    /* =========================
+       FIND ADMIN
+    ========================= */
+    const admin = await Admin.findOne({ email })
 
     if (!admin) {
       return NextResponse.json(
-        { message: "Invalid email or password" },
+        { message: 'Invalid email or password' },
         { status: 401 }
-      );
+      )
     }
 
-    /* -------------------------
-       Verify Password
-    -------------------------- */
-    const isMatch = await bcrypt.compare(password, admin.password);
+    /* =========================
+       VERIFY PASSWORD
+    ========================= */
+    const isMatch = await bcrypt.compare(password, admin.password)
 
     if (!isMatch) {
       return NextResponse.json(
-        { message: "Invalid email or password" },
+        { message: 'Invalid email or password' },
         { status: 401 }
-      );
+      )
     }
 
-    /* -------------------------
-       Sign JWT
-    -------------------------- */
+    /* =========================
+       SIGN JWT
+    ========================= */
     const token = signJWT({
       adminId: admin._id.toString(),
       email: admin.email,
       role: admin.role,
-    });
+    })
 
-    /* -------------------------
-       Set Cookie (HTTP Only)
-    -------------------------- */
+    /* =========================
+       SET COOKIE
+    ========================= */
     const response = NextResponse.json(
-      { message: "Login successful" },
+      { message: 'Login successful' },
       { status: 200 }
-    );
+    )
 
-    response.cookies.set("admin_token", token, {
+    response.cookies.set('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
+      path: '/',
+    })
 
-    return response;
+    return response
   } catch (error) {
-    console.error("Admin login error:", error);
+    console.error('Admin login error:', error)
 
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

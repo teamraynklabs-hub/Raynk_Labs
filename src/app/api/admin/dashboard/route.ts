@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
 import Service from "@/lib/models/Service";
 import Course from "@/lib/models/Course";
 import Project from "@/lib/models/Project";
 import Software from "@/lib/models/Software";
-import TeamMember from "@/lib/models/TeamMember";
+import TeamMember from "@/lib/models/Team";
 
 export async function GET() {
   try {

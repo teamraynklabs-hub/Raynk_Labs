@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyJWT } from "@/lib/auth/jwt";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
 import PersonalTask from "@/lib/models/PersonalTask";
 
 export async function GET() {
