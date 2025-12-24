@@ -1,111 +1,158 @@
 'use client'
 
-import { useState } from 'react'
-import FormModal from '@/components/cards/FormModal'
-import {
-  FileText,
-  FileCheck,
-  CalendarCheck,
-  Route,
-  ListChecks,
-  ArrowRight,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { FileText, ArrowRight, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+
+interface Software {
+  _id: string
+  name: string
+  description: string
+  downloadUrl?: string
+  image?: {
+    url?: string
+  }
+}
+
+/* ================= URL NORMALIZER ================= */
+function normalizeUrl(url?: string) {
+  if (!url) return '#'
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  return `https://${url}`
+}
 
 export default function SoftwareCard() {
-  const [selectedTool, setSelectedTool] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [data, setData] = useState<Software[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const tools = [
-    {
-      title: 'AI Resume Builder',
-      description: 'Create professional resumes in minutes with AI assistance',
-      icon: FileText,
-    },
-    {
-      title: 'Notes Summarizer',
-      description: 'Instantly summarize your study notes with AI',
-      icon: FileCheck,
-    },
-    {
-      title: 'Study Planner',
-      description: 'Smart schedules optimized for your learning style',
-      icon: CalendarCheck,
-    },
-    {
-      title: 'Skill Roadmap AI',
-      description: 'Personalized learning paths for any skill',
-      icon: Route,
-    },
-    {
-      title: 'Assignment Assistant',
-      description: 'AI-powered help for your assignments',
-      icon: ListChecks,
-    },
-  ]
-
-  const handleToolClick = (tool: string) => {
-    setSelectedTool(tool)
-    setIsModalOpen(true)
-  }
+  useEffect(() => {
+    async function fetchSoftwares() {
+      try {
+        const res = await fetch('/api/softwares', { cache: 'no-store' })
+        const json = await res.json()
+        setData(json)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSoftwares()
+  }, [])
 
   return (
-    <>
-      <section
-        id="ai-tools"
-        className="bg-background py-24 transition-colors"
-      >
-        <div className="mx-auto max-w-6xl px-4">
-          {/* Section header */}
-          <h2 className="mb-3 text-center text-3xl font-bold text-foreground">
-            AI-Powered Tools
-          </h2>
-          <p className="mb-16 text-center text-muted-foreground">
-            Smart tools to supercharge your productivity
-          </p>
+    <section id="ai-tools" className="bg-background py-24">
+      <div className="mx-auto max-w-6xl px-4">
+        {/* HEADER */}
+        <h2 className="mb-3 text-center text-3xl font-bold text-foreground">
+          AI-Powered Tools
+        </h2>
+        <p className="mb-16 text-center text-muted-foreground">
+          Smart tools to boost your productivity
+        </p>
 
-          {/* Tools grid */}
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {tools.map(({ title, description, icon: Icon }) => (
-              <div
-                key={title}
-                className="group relative rounded-2xl border border-border bg-card p-8 text-center backdrop-blur transition-all hover:-translate-y-2 hover:border-primary/50 hover:shadow-2xl"
+        {/* LOADING */}
+        {loading && (
+          <div className="flex justify-center">
+            <Loader2 className="animate-spin text-primary" size={32} />
+          </div>
+        )}
+
+        {/* GRID */}
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {data.map((tool, index) => {
+            const imageUrl =
+              tool.image?.url && tool.image.url.trim()
+                ? tool.image.url
+                : null
+
+            const finalUrl = normalizeUrl(tool.downloadUrl)
+
+            return (
+              <motion.div
+                key={tool._id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                viewport={{ once: true }}
+                className="
+                  group relative overflow-hidden
+                  rounded-2xl border border-border bg-card p-8 text-center
+                  transition-all
+                  hover:-translate-y-2
+                  hover:border-primary/50
+                  hover:shadow-2xl
+                "
               >
-                {/* Icon */}
-                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-primary transition-all group-hover:rotate-6 group-hover:scale-110">
-                  <Icon size={36} />
+                {/* TOP GRADIENT LINE */}
+                <div
+                  className="
+                    absolute top-0 left-0 h-1 w-full
+                    origin-left scale-x-0
+                    bg-gradient-to-r from-primary to-accent
+                    transition-transform duration-300
+                    group-hover:scale-x-100
+                  "
+                />
+
+                {/* IMAGE / ICON */}
+                <div
+                  className="
+                    relative mx-auto mb-6
+                    flex h-20 w-20 items-center justify-center
+                    overflow-hidden rounded-full
+                    bg-primary/15 text-primary
+                    transition group-hover:scale-110
+                  "
+                >
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={tool.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-125"
+                    />
+                  ) : (
+                    <FileText size={36} />
+                  )}
                 </div>
 
-                {/* Content */}
+                {/* TITLE */}
                 <h3 className="mb-3 text-xl font-semibold text-card-foreground">
-                  {title}
+                  {tool.name}
                 </h3>
-                <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-                  {description}
+
+                {/* DESCRIPTION */}
+                <p className="mb-6 text-sm text-muted-foreground">
+                  {tool.description}
                 </p>
 
-                {/* Action */}
-                <button
-                  onClick={() => handleToolClick(title)}
-                  className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-6 py-2 text-sm font-semibold text-primary transition-all hover:bg-primary/10 hover:translate-x-1"
+                {/* CTA BUTTON – SAME AS PREVIOUS CARDS */}
+                <Link
+                  href={finalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    inline-flex w-full items-center justify-center gap-2
+                    rounded-full
+                    bg-gradient-to-r from-primary to-accent
+                    py-3 font-semibold
+                    text-primary-foreground
+                    transition
+                    hover:-translate-y-1
+                    hover:shadow-xl
+                  "
                 >
-                  Try Now
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
+                  Try Tool
+                  <ArrowRight size={18} />
+                </Link>
+              </motion.div>
+            )
+          })}
         </div>
-      </section>
-
-      {/* Modal */}
-      {isModalOpen && selectedTool && (
-        <FormModal
-          type="ai_tool"
-          title={selectedTool}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-      )}
-    </>
+      </div>
+    </section>
   )
 }
