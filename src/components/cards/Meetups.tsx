@@ -1,101 +1,82 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import FormModal from '@/components/cards/FormModal'
 import {
   CalendarDays,
   Presentation,
   Podcast,
+  Loader2,
 } from 'lucide-react'
 
+const ICON_MAP: any = {
+  meetup: CalendarDays,
+  masterclass: Presentation,
+  podcast: Podcast,
+}
+
 export default function Meetups() {
-  const [selectedMeetup, setSelectedMeetup] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<string | null>(null)
 
-  const meetups = [
-    {
-      id: 'weekly-tech-meetup',
-      title: 'Weekly Tech Meetup',
-      date: 'Every Saturday, 6 PM IST',
-      description:
-        'Join fellow students for tech discussions, project showcases, and networking.',
-      icon: CalendarDays,
-      cta: 'Register',
-    },
-    {
-      id: 'masterclass-series',
-      title: 'Masterclass Series',
-      date: 'Monthly Sessions',
-      description:
-        'Expert-led sessions on advanced topics in tech and entrepreneurship.',
-      icon: Presentation,
-      cta: 'Register',
-    },
-    {
-      id: 'student-podcast',
-      title: 'Student Innovators Podcast',
-      date: 'Weekly Episodes',
-      description:
-        'Stories, insights, and journeys of successful student entrepreneurs.',
-      icon: Podcast,
-      cta: 'Listen Now',
-    },
-  ]
-
-  const handleMeetupClick = (title: string) => {
-    setSelectedMeetup(title)
-    setIsModalOpen(true)
-  }
+  useEffect(() => {
+    async function fetchData() {
+      const res = await fetch('/api/meetups', { cache: 'no-store' })
+      setData(await res.json())
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
 
   return (
     <>
-      <section
-        id="meetups"
-        className="bg-background py-24 transition-colors"
-      >
+      <section id="meetups" className="py-24">
         <div className="mx-auto max-w-6xl px-4">
-          <h2 className="mb-14 text-center text-3xl font-bold text-foreground">
+          <h2 className="mb-14 text-center text-3xl font-bold">
             Meetups & Podcasts
           </h2>
 
+          {loading && (
+            <div className="flex justify-center">
+              <Loader2 className="animate-spin" size={32} />
+            </div>
+          )}
+
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {meetups.map((meetup) => {
-              const Icon = meetup.icon
+            {data.map(item => {
+              const Icon = ICON_MAP[item.type]
 
               return (
                 <div
-                  key={meetup.id}
-                  className="group relative rounded-2xl border border-border bg-card p-8 text-center backdrop-blur transition-all hover:-translate-y-2 hover:border-primary/50 hover:shadow-2xl"
+                  key={item._id}
+                  className="group relative rounded-2xl border bg-card p-8 text-center transition hover:-translate-y-2 hover:shadow-xl"
                 >
-                  {/* Badge */}
-                  <span className="absolute right-5 top-5 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-1 text-xs font-semibold text-primary-foreground">
+                  <span className="absolute right-5 top-5 rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">
                     Free
                   </span>
 
-                  {/* Icon */}
-                  <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-primary transition-all group-hover:scale-110">
+                  <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary/15 text-primary group-hover:scale-110 transition">
                     <Icon size={40} />
                   </div>
 
-                  {/* Content */}
-                  <h3 className="mb-2 text-xl font-semibold text-card-foreground">
-                    {meetup.title}
+                  <h3 className="mb-2 text-xl font-semibold">
+                    {item.title}
                   </h3>
 
                   <p className="mb-3 text-sm font-medium text-primary">
-                    {meetup.date}
+                    {item.date}
                   </p>
 
-                  <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-                    {meetup.description}
+                  <p className="mb-6 text-sm text-muted-foreground">
+                    {item.description}
                   </p>
 
-                  {/* CTA */}
                   <button
-                    onClick={() => handleMeetupClick(meetup.title)}
-                    className="w-full rounded-full bg-gradient-to-r from-primary to-accent py-3 font-semibold text-primary-foreground transition-all hover:-translate-y-1 hover:shadow-xl"
+                    onClick={() => setSelected(item.title)}
+                    className="w-full rounded-full bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90 transition"
                   >
-                    {meetup.cta}
+                    {item.cta}
                   </button>
                 </div>
               )
@@ -104,13 +85,12 @@ export default function Meetups() {
         </div>
       </section>
 
-      {/* Modal */}
-      {isModalOpen && selectedMeetup && (
+      {selected && (
         <FormModal
           type="meetup"
-          title={selectedMeetup}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          title={selected}
+          isOpen={true}
+          onClose={() => setSelected(null)}
         />
       )}
     </>

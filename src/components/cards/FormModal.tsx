@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, CheckCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface FormField {
   name: string
@@ -28,12 +29,13 @@ interface FormModalProps {
   onClose?: () => void
 }
 
+/* ================= DEFAULT FIELDS ================= */
 const defaultFields: Record<string, FormField[]> = {
   service: [
-    { name: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Your name' },
-    { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'your@email.com' },
-    { name: 'phone', label: 'Phone', type: 'tel', placeholder: 'Your phone number' },
-    { name: 'message', label: 'Message', type: 'textarea', placeholder: 'Tell us about your project' },
+    { name: 'name', label: 'Name', type: 'text', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'phone', label: 'Phone', type: 'tel' },
+    { name: 'message', label: 'Message', type: 'textarea' },
   ],
   course: [
     { name: 'name', label: 'Name', type: 'text', required: true },
@@ -86,6 +88,9 @@ export default function FormModal({
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
+  /* ✅ TOAST STATE (OUTSIDE MODAL LIFECYCLE) */
+  const [showSuccess, setShowSuccess] = useState(false)
+
   const isOpen = externalOpen ?? internalOpen
   const displayTitle = title || originTitle || 'Form'
   const formFields = fields || defaultFields[type]
@@ -95,6 +100,7 @@ export default function FormModal({
     onClose ? onClose() : setInternalOpen(false)
   }
 
+  /* ================= SUBMIT ================= */
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -103,14 +109,23 @@ export default function FormModal({
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, origin_title: displayTitle, ...formData }),
+        body: JSON.stringify({
+          type,
+          origin_title: displayTitle,
+          ...formData,
+        }),
       })
 
       const data = await res.json()
-      alert(data.message || 'Submitted')
-      if (data.success) close()
+
+      if (data.success) {
+        setShowSuccess(true)
+        setTimeout(() => {close(); setShowSuccess(false)}, 1500)
+      } else {
+        alert(data.message || 'Submission failed')
+      }
     } catch {
-      alert('Submission failed')
+      alert('Network error. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -118,6 +133,7 @@ export default function FormModal({
 
   return (
     <>
+      {/* OPEN BUTTON */}
       {buttonText && (
         <button
           onClick={() => setInternalOpen(true)}
@@ -127,6 +143,7 @@ export default function FormModal({
         </button>
       )}
 
+      {/* MODAL */}
       {isOpen && (
         <div
           onClick={close}
@@ -154,23 +171,23 @@ export default function FormModal({
 
                   {field.type === 'textarea' ? (
                     <textarea
-                      name={field.name}
                       required={field.required}
-                      placeholder={field.placeholder}
                       value={formData[field.name] || ''}
-                      onChange={e => setFormData({ ...formData, [field.name]: e.target.value })}
+                      onChange={e =>
+                        setFormData({ ...formData, [field.name]: e.target.value })
+                      }
                       rows={4}
-                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   ) : (
                     <input
                       type={field.type}
-                      name={field.name}
                       required={field.required}
-                      placeholder={field.placeholder}
                       value={formData[field.name] || ''}
-                      onChange={e => setFormData({ ...formData, [field.name]: e.target.value })}
-                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-3 text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      onChange={e =>
+                        setFormData({ ...formData, [field.name]: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-primary/20 bg-background px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   )}
                 </div>
@@ -180,14 +197,14 @@ export default function FormModal({
                 <button
                   type="button"
                   onClick={close}
-                  className="rounded-full border border-border px-6 py-2 text-sm transition hover:bg-muted"
+                  className="rounded-full border px-6 py-2 text-sm hover:bg-muted"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-full bg-gradient-to-r from-primary to-[var(--electric-purple)] px-6 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  className="rounded-full bg-gradient-to-r from-primary to-[var(--electric-purple)] px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   {loading ? 'Submitting...' : 'Submit'}
                 </button>
@@ -196,6 +213,27 @@ export default function FormModal({
           </div>
         </div>
       )}
+
+      {/* ✅ SUCCESS TOAST (NOW ALWAYS WORKS) */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="
+              fixed top-24 left-1/2 z-50
+              flex -translate-x-1/2 items-center gap-3
+              rounded-xl border border-green-500/50
+              bg-green-500/20 px-6 py-3
+              text-green-400 backdrop-blur
+            "
+          >
+            <CheckCircle size={20} />
+            Message sent successfully!
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

@@ -1,192 +1,100 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import Project from "@/lib/models/Project";
-import { uploadImage, deleteImage } from "@/lib/cloudinary";
-import fs from "fs";
-import path from "path";
-import os from "os";
+import { NextResponse } from 'next/server'
+import { connectDB } from '@/lib/mongodb'
+import Project from '@/lib/models/Project'
 
-/* =========================
-   GET → Public projects
-========================= */
+/* ======================
+   GET → Public Projects
+====================== */
 export async function GET() {
   try {
-    await connectDB();
-    const projects = await Project.find().sort({
+    await connectDB()
+    const projects = await Project.find({ isActive: true }).sort({
       createdAt: -1,
-    });
-
-    return NextResponse.json(projects, { status: 200 });
+    })
+    return NextResponse.json(projects)
   } catch {
     return NextResponse.json(
-      { message: "Failed to fetch projects" },
+      { message: 'Failed to fetch projects' },
       { status: 500 }
-    );
+    )
   }
 }
 
-/* =========================
-   POST → Create project
-========================= */
+/* ======================
+   POST → Admin Create
+====================== */
 export async function POST(req: Request) {
   try {
-    await connectDB();
+    await connectDB()
+    const body = await req.json()
 
-    const formData = await req.formData();
-
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const projectType = formData.get("projectType") as string;
-    const link = formData.get("link") as string;
-    const techStack = formData.getAll("techStack") as string[];
-    const imageFile = formData.get("image") as File;
-
-    if (!title || !description || !imageFile) {
-      return NextResponse.json(
-        { message: "Title, description and image are required" },
-        { status: 400 }
-      );
-    }
-
-    /* Save temp file */
-    const bytes = await imageFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const tempPath = path.join(
-      os.tmpdir(),
-      `${Date.now()}-${imageFile.name}`
-    );
-
-    fs.writeFileSync(tempPath, buffer);
-
-    /* Upload to Cloudinary */
-    const image = await uploadImage(tempPath, "projects");
-
-    fs.unlinkSync(tempPath);
-
-    const project = await Project.create({
-      title,
-      description,
-      projectType,
-      link,
-      techStack,
-      image,
-    });
-
-    return NextResponse.json(project, { status: 201 });
+    const project = await Project.create(body)
+    return NextResponse.json(project, { status: 201 })
   } catch {
     return NextResponse.json(
-      { message: "Failed to create project" },
+      { message: 'Failed to create project' },
       { status: 500 }
-    );
+    )
   }
 }
 
-/* =========================
-   PUT → Update project
-========================= */
+/* ======================
+   PUT → Admin Update
+====================== */
 export async function PUT(req: Request) {
   try {
-    await connectDB();
+    await connectDB()
+    const { id, ...data } = await req.json()
 
-    const formData = await req.formData();
-    const id = formData.get("id") as string;
+    const updated = await Project.findByIdAndUpdate(id, data, {
+      new: true,
+    })
+
+    return NextResponse.json(updated)
+  } catch {
+    return NextResponse.json(
+      { message: 'Failed to update project' },
+      { status: 500 }
+    )
+  }
+}
+/* ======================
+   DELETE → Admin Remove (SOFT DELETE)
+====================== */
+export async function DELETE(req: Request) {
+  try {
+    await connectDB()
+    const { id } = await req.json()
 
     if (!id) {
       return NextResponse.json(
-        { message: "Project ID required" },
+        { message: 'Project ID required' },
         { status: 400 }
-      );
+      )
     }
 
-    const project = await Project.findById(id);
-    if (!project) {
+    const deleted = await Project.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    )
+
+    if (!deleted) {
       return NextResponse.json(
-        { message: "Project not found" },
+        { message: 'Project not found' },
         { status: 404 }
-      );
+      )
     }
 
-    /* Replace image if new one provided */
-    const imageFile = formData.get("image") as File | null;
-
-    if (imageFile) {
-      await deleteImage(project.image.publicId);
-
-      const bytes = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const tempPath = path.join(
-        os.tmpdir(),
-        `${Date.now()}-${imageFile.name}`
-      );
-
-      fs.writeFileSync(tempPath, buffer);
-
-      const image = await uploadImage(tempPath, "projects");
-
-      fs.unlinkSync(tempPath);
-
-      project.image = image;
-    }
-
-    project.title =
-      (formData.get("title") as string) || project.title;
-    project.description =
-      (formData.get("description") as string) ||
-      project.description;
-    project.projectType =
-      (formData.get("projectType") as string) ||
-      project.projectType;
-    project.link =
-      (formData.get("link") as string) || project.link;
-
-    const techStack = formData.getAll("techStack");
-    if (techStack.length > 0) {
-      project.techStack = techStack as string[];
-    }
-
-    await project.save();
-
-    return NextResponse.json(project, { status: 200 });
-  } catch {
+    return NextResponse.json({
+      success: true,
+      message: 'Project removed successfully',
+    })
+  } catch (error) {
+    console.error('DELETE Project Error:', error)
     return NextResponse.json(
-      { message: "Failed to update project" },
+      { message: 'Failed to delete project' },
       { status: 500 }
-    );
-  }
-}
-
-/* =========================
-   DELETE → Remove project
-========================= */
-export async function DELETE(req: Request) {
-  try {
-    await connectDB();
-
-    const { id } = await req.json();
-
-    const project = await Project.findById(id);
-    if (!project) {
-      return NextResponse.json(
-        { message: "Project not found" },
-        { status: 404 }
-      );
-    }
-
-    /* Delete Cloudinary image */
-    await deleteImage(project.image.publicId);
-
-    await Project.findByIdAndDelete(id);
-
-    return NextResponse.json(
-      { message: "Project deleted successfully" },
-      { status: 200 }
-    );
-  } catch {
-    return NextResponse.json(
-      { message: "Failed to delete project" },
-      { status: 500 }
-    );
+    )
   }
 }

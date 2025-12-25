@@ -32,7 +32,6 @@ export default function TeamCard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  /* ================= FETCH TEAM ================= */
   useEffect(() => {
     async function fetchTeam() {
       try {
@@ -50,14 +49,18 @@ export default function TeamCard() {
   }, [])
 
   return (
-    <section id="team" className="py-24">
+    <section id="team" className="py-28">
       <div className="mx-auto max-w-7xl px-6">
         {/* ================= HEADER ================= */}
         <motion.h2
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-4 text-center text-3xl font-bold"
+          className="
+            mb-4 text-center text-4xl font-extrabold
+            bg-gradient-to-r from-primary to-[var(--electric-purple)]
+            bg-clip-text text-transparent
+          "
         >
           Meet Our Team
         </motion.h2>
@@ -67,7 +70,7 @@ export default function TeamCard() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
           viewport={{ once: true }}
-          className="mb-16 text-center text-muted-foreground"
+          className="mb-20 text-center text-muted-foreground text-lg"
         >
           Passionate people building real products
         </motion.p>
@@ -75,7 +78,7 @@ export default function TeamCard() {
         {/* ================= LOADING ================= */}
         {loading && (
           <div className="flex justify-center">
-            <Loader2 className="animate-spin text-primary" size={32} />
+            <Loader2 className="animate-spin text-primary" size={34} />
           </div>
         )}
 
@@ -88,11 +91,9 @@ export default function TeamCard() {
 
         {/* ================= CARDS ================= */}
         {!loading && !error && (
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
             {team.map((member, index) => {
-              const imageUrl =
-                member.image?.url?.trim() || null
-
+              const imageUrl = member.image?.url?.trim() || null
               const skills = member.skills
                 ? member.skills.split(',').map(s => s.trim())
                 : []
@@ -100,18 +101,32 @@ export default function TeamCard() {
               return (
                 <motion.div
                   key={member._id}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.12 }}
                   viewport={{ once: true }}
                   className="
-                    group relative rounded-3xl border bg-card p-8 text-center
-                    transition-all duration-300
-                    hover:-translate-y-3 hover:shadow-2xl
+                    group relative rounded-3xl border border-border
+                    bg-card/70 p-8 text-center backdrop-blur
+                    transition-all duration-500
+                    hover:-translate-y-4 hover:border-primary/50
+                    hover:shadow-[0_25px_80px_oklch(0.62_0.22_259_/0.25)]
                   "
                 >
                   {/* ================= AVATAR ================= */}
-                  <div className="relative mx-auto mb-6 h-40 w-40 overflow-hidden rounded-full border-4 border-primary/20">
+                  <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                    className="
+                      relative mx-auto mb-6 h-40 w-40
+                      overflow-hidden rounded-full
+                      border-4 border-primary/25
+                    "
+                  >
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
@@ -119,13 +134,13 @@ export default function TeamCard() {
                         fill
                         sizes="160px"
                         className="
-                          object-cover transition-transform duration-500
+                          object-cover transition-transform duration-700
                           group-hover:scale-110
                         "
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                        <User size={48} />
+                        <User size={52} />
                       </div>
                     )}
 
@@ -138,30 +153,32 @@ export default function TeamCard() {
                       "
                       style={{
                         boxShadow:
-                          '0 0 40px oklch(0.62 0.22 259 / 0.35)',
+                          '0 0 60px oklch(0.62 0.22 259 / 0.4)',
                       }}
                     />
-                  </div>
+                  </motion.div>
 
                   {/* ================= INFO ================= */}
                   <h3 className="text-xl font-bold">
                     {member.name}
                   </h3>
 
-                  <p className="mb-4 text-sm text-muted-foreground">
+                  <p className="mb-5 text-sm text-muted-foreground">
                     {member.role}
                   </p>
 
                   {/* ================= SKILLS ================= */}
                   {skills.length > 0 && (
-                    <div className="mb-6 flex flex-wrap justify-center gap-2">
+                    <div className="mb-8 flex flex-wrap justify-center gap-2">
                       {skills.map(skill => (
                         <span
                           key={skill}
                           className="
                             rounded-full border border-primary/30
-                            bg-primary/10 px-4 py-1 text-xs font-medium
-                            text-primary
+                            bg-primary/10 px-4 py-1 text-xs
+                            font-medium text-primary
+                            transition
+                            hover:bg-primary hover:text-primary-foreground
                           "
                         >
                           {skill}
@@ -171,50 +188,28 @@ export default function TeamCard() {
                   )}
 
                   {/* ================= SOCIAL ================= */}
-                  <div className="flex justify-center gap-4 border-t border-border pt-5">
-                    {member.github && (
-                      <a
-                        href={member.github}
-                        target="_blank"
-                        className="
-                          rounded-full border border-primary/30
-                          bg-primary/10 p-3 text-primary
-                          transition hover:scale-110 hover:bg-primary
-                          hover:text-primary-foreground
-                        "
-                      >
-                        <Github size={18} />
-                      </a>
-                    )}
-
-                    {member.linkedin && (
-                      <a
-                        href={member.linkedin}
-                        target="_blank"
-                        className="
-                          rounded-full border border-primary/30
-                          bg-primary/10 p-3 text-primary
-                          transition hover:scale-110 hover:bg-primary
-                          hover:text-primary-foreground
-                        "
-                      >
-                        <Linkedin size={18} />
-                      </a>
-                    )}
-
-                    {member.portfolio && (
-                      <a
-                        href={member.portfolio}
-                        target="_blank"
-                        className="
-                          rounded-full border border-primary/30
-                          bg-primary/10 p-3 text-primary
-                          transition hover:scale-110 hover:bg-primary
-                          hover:text-primary-foreground
-                        "
-                      >
-                        <Globe size={18} />
-                      </a>
+                  <div className="flex justify-center gap-5 border-t border-border pt-6">
+                    {[member.github, member.linkedin, member.portfolio].map(
+                      (link, i) =>
+                        link && (
+                          <motion.a
+                            key={i}
+                            href={link}
+                            target="_blank"
+                            whileHover={{ scale: 1.2, rotate: 6 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="
+                              rounded-full border border-primary/30
+                              bg-primary/10 p-3 text-primary
+                              transition hover:bg-primary
+                              hover:text-primary-foreground
+                            "
+                          >
+                            {i === 0 && <Github size={18} />}
+                            {i === 1 && <Linkedin size={18} />}
+                            {i === 2 && <Globe size={18} />}
+                          </motion.a>
+                        )
                     )}
                   </div>
                 </motion.div>

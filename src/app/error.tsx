@@ -20,7 +20,7 @@ export default function Error({
 
         <button
           onClick={reset}
-          className="rounded-full bg-gradient-to-r from-primary to-accent px-8 py-3 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-lg"
+          className="rounded-full cursor-pointer bg-gradient-to-r from-primary to-accent px-8 py-3 text-sm font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-lg"
         >
           Try again
         </button>

@@ -1,74 +1,155 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Users, CheckCircle, User } from 'lucide-react'
+import { motion } from 'framer-motion'
 import FormModal from '@/components/cards/FormModal'
-import { Users, CheckCircle } from 'lucide-react'
 
 export default function Community() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [data, setData] = useState<any>(null)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/community', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(setData)
+  }, [])
+
+  if (!data) return null
 
   return (
     <>
-      <section
-        id="community"
-        className="bg-background py-24 transition-colors"
-      >
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid items-center gap-16 md:grid-cols-2">
-            {/* Text content */}
-            <div className="max-w-xl">
-              <h2 className="mb-6 text-3xl font-bold text-foreground">
-                RaYnk Innovators Club
+      <section id="community" className="relative overflow-hidden py-20">
+
+        <div className="relative mx-auto max-w-6xl px-4">
+          <div className="grid items-center gap-20 md:grid-cols-2">
+            {/* ================= TEXT ================= */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-xl"
+            >
+              <h2
+                className="
+                  mb-6 text-4xl font-extrabold
+                  bg-gradient-to-r from-primary to-[var(--electric-purple)]
+                  bg-clip-text text-transparent
+                "
+              >
+                {data.title}
               </h2>
 
-              <p className="mb-8 text-base leading-relaxed text-muted-foreground md:text-lg">
-                Join a vibrant community of student innovators, creators, and
-                learners. Connect, collaborate, and grow together.
+              <p className="mb-10 text-lg text-muted-foreground">
+                {data.description}
               </p>
 
-              <div className="mb-10 space-y-4">
-                {[
-                  'Student-to-student learning',
-                  'Weekly tech meetups',
-                  'Exclusive podcasts',
-                  '24/7 peer support',
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 text-foreground/90"
-                  >
+              <div className="mb-12 space-y-4">
+                {data.points.map((p: string) => (
+                  <div key={p} className="flex items-center gap-3">
                     <CheckCircle className="text-primary" size={20} />
-                    <span>{item}</span>
+                    <span className="text-sm">{p}</span>
                   </div>
                 ))}
               </div>
 
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center justify-center rounded-full bg-primary px-10 py-4 text-base font-semibold text-primary-foreground transition-all hover:scale-105 hover:shadow-xl"
+                onClick={() => setOpen(true)}
+                className="
+                  inline-flex items-center justify-center
+                  rounded-full bg-gradient-to-r
+                  from-primary to-[var(--electric-purple)]
+                  px-12 py-4 font-semibold text-primary-foreground
+                  transition-all
+                  hover:-translate-y-1 hover:shadow-2xl
+                "
               >
-                Join Community — Free
+                {data.ctaText}
               </button>
-            </div>
+            </motion.div>
 
-            {/* Visual */}
-            <div className="relative flex h-[360px] items-center justify-center">
-              <div className="absolute h-72 w-72 animate-pulse rounded-full bg-gradient-to-br from-primary/20 to-accent/20" />
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-primary/20 text-primary shadow-lg">
-                <Users size={48} />
+            {/* ================= VISUAL ================= */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative flex h-[380px] items-center justify-center"
+            >
+              {/* Outer glow ring */}
+              <div className="absolute h-80 w-80 rounded-full bg-primary/10 blur-xl" />
+
+              {/* Main Circle */}
+              <div
+                className="
+                  relative flex h-64 w-64 items-center justify-center
+                  rounded-full border border-primary/30
+                  bg-card shadow-2xl
+                  transition group hover:border-primary/60
+                "
+              >
+                {/* Floating users INSIDE circle */}
+                <motion.div
+                  className="absolute top-10 left-1/2 -translate-x-1/2 text-primary"
+                  animate={{ y: [0, -12, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <User size={20} />
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-12 left-12 text-primary"
+                  animate={{ y: [0, 10, 0] }}
+                  transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <User size={18} />
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-14 right-14 text-primary"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <User size={18} />
+                </motion.div>
+
+                {/* Center Icon */}
+                <div
+                  className="
+                    relative z-10 flex h-24 w-24 items-center justify-center
+                    rounded-full bg-primary/15 text-primary
+                    shadow-lg transition
+                    group-hover:scale-110
+                  "
+                >
+                  <Users size={44} />
+                </div>
+
+                {/* Hover glow */}
+                <div
+                  className="
+                    pointer-events-none absolute inset-0 rounded-full
+                    opacity-0 transition group-hover:opacity-100
+                  "
+                  style={{
+                    boxShadow:
+                      'inset 0 0 0 1px oklch(1 0 0 / 8%), 0 0 80px oklch(0.62 0.22 259 / 0.25)',
+                  }}
+                />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Modal */}
-      {isModalOpen && (
+      {/* ================= MODAL ================= */}
+      {open && (
         <FormModal
           type="community"
-          title="RaYnk Innovators Club"
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          title={data.title}
+          isOpen={open}
+          onClose={() => setOpen(false)}
         />
       )}
     </>

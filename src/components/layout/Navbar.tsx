@@ -22,7 +22,7 @@ import { ModeToggle } from '../theme/mode-toggle'
 
 /* ================= SIDE DOCK (HOME SECTIONS) ================= */
 const sideLinks = [
-  { id: 'home', icon: Home },
+  { id: 'hero', icon: Home },
   { id: 'services', icon: Briefcase },
   { id: 'courses', icon: GraduationCap },
   { id: 'ai-tools', icon: Bot },
@@ -119,7 +119,7 @@ export default function Navigation() {
                 <span className="absolute -bottom-2 left-0 h-[2px] w-full bg-primary rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
               </Link>
             ))}
-            <ModeToggle />
+            {/* <ModeToggle /> */}
           </div>
 
           {/* MOBILE MENU BUTTON */}
@@ -151,7 +151,7 @@ export default function Navigation() {
                     {link.label}
                   </Link>
                 ))}
-            <ModeToggle />
+            {/* <ModeToggle /> */}
               </div>
             </motion.div>
           )}

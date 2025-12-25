@@ -10,9 +10,10 @@ import SoftwareCard from '@/components/cards/SoftwareCard'
 import Community from '@/components/cards/Community'
 import TeamCard from '@/components/cards/TeamCard'
 import Meetups from '@/components/cards/Meetups'
-import TurningPoint from '@/components/cards/TurningPoint'
+import UpcomingProject from '@/components/cards/UpcomingProject'
 import ContactCard from '@/components/cards/ContactCard'
 import CourseCard from '@/components/cards/CourseCard'
+import ProjectsCard from '@/components/cards/ProjectCard'
 
 /* =======================
    HOME PAGE
@@ -43,13 +44,17 @@ export default function Home() {
       <SoftwareCard />
 
       {/* ================= TURNING POINT ================= */}
-      <TurningPoint />
+      <UpcomingProject />
 
       {/* ================= COMMUNITY ================= */}
       <Community />
 
+      {/* ================= PROJECTS ================= */}
+      <ProjectsCard />
+
+
       {/* ================= MEETUPS / EVENTS ================= */}
-      <Meetups />
+      {/* <Meetups /> */}
 
       {/* ================= TEAM ================= */}
       <TeamCard />

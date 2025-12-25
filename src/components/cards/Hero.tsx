@@ -1,89 +1,114 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 
 export default function Hero() {
-  const words = ['Learn', 'Earn', 'Grow', 'Innovate']
+  const [data, setData] = useState<any>(null)
 
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
-    },
-  }
+  useEffect(() => {
+    fetch('/api/hero', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(setData)
+  }, [])
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  }
+  if (!data) return null
 
   return (
-    <section
-      id="home"
-      className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden bg-background px-4"
-    >
-      {/* Background blobs */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-gradient-to-br from-primary to-[var(--electric-purple)] blur-[80px] opacity-30" />
-        <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-gradient-to-br from-[var(--electric-purple)] to-primary blur-[80px] opacity-30" />
-        <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-primary to-[var(--electric-purple)] blur-[80px] opacity-25" />
+    <section id='hero' className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden bg-background px-4">
+      {/* ================= PARTICLE / CONSTELLATION BG ================= */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        {/* dark gradient base */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-black/40" />
+
+        {/* glowing dots */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute left-[10%] top-[15%] h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          <div className="absolute left-[70%] top-[25%] h-1 w-1 rounded-full bg-[var(--electric-purple)] animate-pulse" />
+          <div className="absolute left-[30%] top-[60%] h-1 w-1 rounded-full bg-primary animate-pulse" />
+          <div className="absolute left-[80%] top-[75%] h-1.5 w-1.5 rounded-full bg-[var(--electric-purple)] animate-pulse" />
+        </div>
+
+        {/* blurred glow blobs */}
+        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-primary/30 blur-[120px]" />
+        <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-[var(--electric-purple)]/30 blur-[120px]" />
       </div>
 
+      {/* ================= CONTENT ================= */}
       <motion.div
-        variants={container}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
         className="relative z-10 mx-auto max-w-5xl text-center"
       >
-        <motion.h1
-          variants={item}
-          className="mb-6 bg-gradient-to-r from-primary via-[var(--electric-purple)] to-primary bg-[length:200%] bg-clip-text text-5xl font-extrabold tracking-tight text-transparent md:text-7xl"
-        >
-          RaYnk Labs
-        </motion.h1>
+        {/* TITLE */}
+        <h1 className="mb-6 bg-gradient-to-r from-primary to-[var(--electric-purple)] bg-clip-text text-5xl font-extrabold text-transparent md:text-7xl">
+          {data.title}
+        </h1>
 
-        <motion.div variants={item} className="mb-6 flex flex-wrap justify-center gap-2">
-          {words.map((word) => (
+        {/* WORD TAGS */}
+        <div className="mb-6 flex flex-wrap justify-center gap-3">
+          {data.words.map((w: string) => (
             <span
-              key={word}
-              className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-semibold text-foreground transition hover:bg-primary/15 hover:text-primary md:text-lg"
+              key={w}
+              className="
+                cursor-pointer rounded-xl border border-primary/20
+                bg-primary/5 px-4 py-1.5 text-sm font-semibold
+                transition-all duration-300
+                hover:-translate-y-1 hover:bg-primary/15 hover:shadow-lg
+              "
             >
-              {word}
+              {w}
             </span>
           ))}
-        </motion.div>
+        </div>
 
-        <motion.p
-          variants={item}
-          className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg"
-        >
-          A student-led innovation lab building tools, education, and opportunities for youth.
-        </motion.p>
+        {/* TAGLINE */}
+        <p className="mx-auto mb-10 max-w-2xl text-base text-muted-foreground md:text-lg">
+          {data.tagline}
+        </p>
 
-        <motion.div variants={item} className="flex flex-wrap justify-center gap-4">
-          <a
-            href="#services"
-            className="rounded-full bg-gradient-to-r from-primary to-[var(--electric-purple)] px-8 py-3 font-semibold text-primary-foreground shadow-lg transition hover:opacity-90"
+        {/* BUTTONS */}
+        <div className="flex flex-wrap justify-center gap-4">
+          <Link
+            href={data.primaryBtn.href}
+            className="
+              rounded-full
+              bg-gradient-to-r from-primary to-[var(--electric-purple)]
+              px-8 py-3 font-semibold text-primary-foreground
+              transition-all
+              hover:-translate-y-1 hover:shadow-xl
+            "
           >
-            Explore Services
-          </a>
+            {data.primaryBtn.label}
+          </Link>
 
-          <a
-            href="#community"
-            className="rounded-full border border-primary px-8 py-3 font-semibold text-foreground transition hover:bg-primary/10"
+          <Link
+            href={data.secondaryBtn.href}
+            className="
+              rounded-full border border-primary
+              px-8 py-3 font-semibold
+              transition-all
+              hover:-translate-y-1 hover:bg-primary/10 hover:shadow-lg
+            "
           >
-            Join Community
-          </a>
-        </motion.div>
+            {data.secondaryBtn.label}
+          </Link>
+        </div>
       </motion.div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
+      {/* ================= SCROLL INDICATOR ================= */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10"
+      >
         <div className="flex h-12 w-7 justify-center rounded-full border-2 border-primary">
-          <span className="mt-2 h-2 w-1 animate-bounce rounded-full bg-gradient-to-b from-primary to-[var(--electric-purple)]" />
+          <span className="mt-2 h-2 w-1 animate-bounce rounded-full bg-primary" />
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }
