@@ -1,80 +1,46 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { connectDB } from '@/lib/mongodb'
-import Admin from '@/lib/models/Admin'
-import { signJWT } from '@/lib/auth/jwt'
+import jwt from 'jsonwebtoken'
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    await connectDB()
+    const { email, password } = await req.json()
 
-    const { email, password } = await request.json()
-
-    /* =========================
-       VALIDATION
-    ========================= */
     if (!email || !password) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Email and password required' },
         { status: 400 }
       )
     }
 
-    /* =========================
-       FIND ADMIN
-    ========================= */
-    const admin = await Admin.findOne({ email })
-
-    if (!admin) {
+    if (
+      email !== process.env.ADMIN_EMAIL ||
+      password !== process.env.ADMIN_PASSWORD
+    ) {
       return NextResponse.json(
-        { message: 'Invalid email or password' },
+        { message: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    /* =========================
-       VERIFY PASSWORD
-    ========================= */
-    const isMatch = await bcrypt.compare(password, admin.password)
-
-    if (!isMatch) {
-      return NextResponse.json(
-        { message: 'Invalid email or password' },
-        { status: 401 }
-      )
-    }
-
-    /* =========================
-       SIGN JWT
-    ========================= */
-    const token = signJWT({
-      adminId: admin._id.toString(),
-      email: admin.email,
-      role: admin.role,
-    })
-
-    /* =========================
-       SET COOKIE
-    ========================= */
-    const response = NextResponse.json(
-      { message: 'Login successful' },
-      { status: 200 }
+    const token = jwt.sign(
+      { email, role: 'admin' },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
     )
 
-    response.cookies.set('admin_token', token, {
+    const res = NextResponse.json({ success: true })
+
+    res.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
     })
 
-    return response
-  } catch (error) {
-    console.error('Admin login error:', error)
-
+    return res
+  } catch {
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Login failed' },
       { status: 500 }
     )
   }

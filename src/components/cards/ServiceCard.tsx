@@ -35,7 +35,7 @@ type Service = {
   icon?: string
 }
 
-export default function Services() {
+export default function ServicesCard() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
