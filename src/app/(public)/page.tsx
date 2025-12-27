@@ -54,7 +54,7 @@ export default function Home() {
 
 
       {/* ================= MEETUPS / EVENTS ================= */}
-      {/* <Meetups /> */}
+      <Meetups />
 
       {/* ================= TEAM ================= */}
       <TeamCard />

@@ -1,311 +1,277 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  Plus,
-  X,
-  GraduationCap,
-  Edit,
-  Trash2,
-  Star,
-  Image as ImageIcon,
-  Loader2,
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus, Edit, Trash2, X, Loader2 } from 'lucide-react'
 
-type Course = {
-  id: number
+interface Course {
+  _id: string
   title: string
-  desc: string
-  level: string
-  badge: 'Free' | 'Paid' | 'Popular'
-  imageUrl?: string
+  description: string
+  badge?: string
+  icon?: string
+  order?: number
 }
 
-export default function CoursesManager() {
-  /* TEMP DATA (replace with API later) */
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: 1,
-      title: 'AI for Students',
-      desc: 'Learn AI tools and fundamentals with real use-cases.',
-      level: 'Beginner',
-      badge: 'Free',
-      imageUrl: '',
-    },
-    {
-      id: 2,
-      title: 'Web Development Bootcamp',
-      desc: 'Frontend + Backend with real projects.',
-      level: 'Intermediate',
-      badge: 'Popular',
-      imageUrl: '',
-    },
-  ])
+export default function AdminCoursesPage() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Course | null>(null)
-  const [uploading, setUploading] = useState(false)
 
-  const [form, setForm] = useState<Course>({
-    id: 0,
+  const [form, setForm] = useState({
     title: '',
-    desc: '',
-    level: 'Beginner',
+    description: '',
     badge: 'Free',
-    imageUrl: '',
+    icon: 'default',
+    order: 0,
   })
 
-  /* ---------------- HANDLERS ---------------- */
+  const [error, setError] = useState('')
 
-  function handleChange(e: any) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  /* CLOUDINARY IMAGE UPLOAD */
-  async function handleImage(e: any) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploading(true)
-
+  /* ================= FETCH ================= */
+  async function loadCourses() {
+    setLoading(true)
     try {
-      const body = new FormData()
-      body.append('file', file)
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body,
-      })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message)
-
-      setForm(prev => ({ ...prev, imageUrl: data.url }))
-    } catch {
-      alert('Image upload failed')
+      const res = await fetch('/api/courses', { cache: 'no-store' })
+      setCourses(await res.json())
     } finally {
-      setUploading(false)
+      setLoading(false)
     }
   }
 
+  useEffect(() => {
+    loadCourses()
+  }, [])
+
+  /* ================= FORM ================= */
   function openAdd() {
     setEditing(null)
     setForm({
-      id: 0,
       title: '',
-      desc: '',
-      level: 'Beginner',
+      description: '',
       badge: 'Free',
-      imageUrl: '',
+      icon: 'default',
+      order: 0,
     })
+    setError('')
     setOpen(true)
   }
 
   function openEdit(course: Course) {
     setEditing(course)
-    setForm(course)
+    setForm({
+      title: course.title,
+      description: course.description,
+      badge: course.badge || 'Free',
+      icon: course.icon || 'default',
+      order: course.order || 0,
+    })
+    setError('')
     setOpen(true)
   }
 
   function close() {
     setOpen(false)
     setEditing(null)
+    setError('')
   }
 
-  function save() {
-    if (!form.title.trim()) {
-      alert('Course title required')
+  /* ================= SAVE ================= */
+  async function save() {
+    if (!form.title.trim() || !form.description.trim()) {
+      setError('Title and description are required')
       return
     }
 
-    if (editing) {
-      setCourses(prev =>
-        prev.map(c => (c.id === editing.id ? { ...editing, ...form } : c))
-      )
-      // TODO: PATCH /api/courses/:id
-    } else {
-      setCourses(prev => [{ ...form, id: Date.now() }, ...prev])
-      // TODO: POST /api/courses
+    setSaving(true)
+    try {
+      const res = await fetch('/api/courses', {
+        method: editing ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          editing ? { id: editing._id, ...form } : form
+        ),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message)
+
+      await loadCourses()
+      close()
+    } catch (err: any) {
+      setError(err.message || 'Save failed')
+    } finally {
+      setSaving(false)
     }
-
-    close()
   }
 
-  function remove(id: number) {
+  /* ================= DELETE ================= */
+  async function remove(id: string) {
     if (!confirm('Delete this course?')) return
-    setCourses(prev => prev.filter(c => c.id !== id))
-    // TODO: DELETE /api/courses/:id
+
+    await fetch('/api/courses', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+
+    loadCourses()
   }
 
-  /* ---------------- UI ---------------- */
-
+  /* ================= UI ================= */
   return (
-    <div className="space-y-8 animate-fadeUp">
+    <div className="space-y-10 max-w-6xl">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Courses</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage all learning courses shown on the website.
+          <p className="text-muted-foreground">
+            Manage all courses displayed on the website
           </p>
         </div>
 
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-primary-foreground hover:opacity-90 transition"
+          className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90 transition"
         >
-          <Plus size={18} /> Add Course
+          <Plus size={16} className="inline mr-1" />
+          Add Course
         </button>
       </div>
 
-      {/* GRID */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {courses.map(course => (
-          <div
-            key={course.id}
-            className="group relative rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-1 hover:shadow-xl"
-          >
-            {/* BADGE */}
-            <span
-              className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold
-                ${course.badge === 'Free' && 'bg-primary/15 text-primary'}
-                ${course.badge === 'Paid' && 'bg-destructive/15 text-destructive'}
-                ${course.badge === 'Popular' && 'bg-yellow-400/20 text-yellow-400'}
-              `}
+      {/* LOADING */}
+      {loading && (
+        <div className="flex justify-center">
+          <Loader2 className="animate-spin text-primary" size={32} />
+        </div>
+      )}
+
+      {/* GRID (SERVICE STYLE) */}
+      {!loading && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {courses.map(course => (
+            <div
+              key={course._id}
+              className="
+                group rounded-2xl border border-border bg-card p-5
+                transition-all duration-300
+                hover:-translate-y-1 hover:shadow-xl
+              "
             >
-              {course.badge}
-            </span>
+              {/* BADGE */}
+              <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                {course.badge || 'Free'}
+              </span>
 
-            {/* IMAGE */}
-            <div className="mb-4 flex h-36 items-center justify-center rounded-xl bg-muted overflow-hidden">
-              {course.imageUrl ? (
-                <img
-                  src={course.imageUrl}
-                  alt={course.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <GraduationCap size={36} className="text-muted-foreground" />
-              )}
+              {/* TITLE */}
+              <h3 className="mt-3 text-lg font-semibold">
+                {course.title}
+              </h3>
+
+              {/* DESC */}
+              <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
+                {course.description}
+              </p>
+
+              {/* ACTIONS */}
+              <div className="mt-4 flex justify-between">
+                <button
+                  onClick={() => openEdit(course)}
+                  className="rounded-lg border px-3 py-2 hover:bg-accent transition"
+                >
+                  <Edit size={16} />
+                </button>
+
+                <button
+                  onClick={() => remove(course._id)}
+                  className="rounded-lg border border-destructive/40 px-3 py-2 text-destructive hover:bg-destructive/10 transition"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* CONTENT */}
-            <h3 className="flex items-center gap-2 text-lg font-semibold">
-              <Star size={16} className="text-primary" />
-              {course.title}
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {course.desc}
-            </p>
-
-            <p className="mt-3 text-xs text-muted-foreground">
-              Level: <span className="font-medium">{course.level}</span>
-            </p>
-
-            {/* ACTIONS */}
-            <div className="mt-4 flex justify-between">
-              <button
-                onClick={() => openEdit(course)}
-                className="rounded-lg border px-3 py-1.5 hover:bg-accent transition"
-              >
-                <Edit size={16} />
-              </button>
-
-              <button
-                onClick={() => remove(course.id)}
-                className="rounded-lg border border-destructive/30 px-3 py-1.5 text-destructive hover:bg-destructive/10 transition"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* MODAL */}
+      {/* MODAL (UNCHANGED FUNCTIONALITY) */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 animate-in fade-in zoom-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl bg-card border p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-xl font-bold">
                 {editing ? 'Edit Course' : 'Add Course'}
               </h2>
               <button onClick={close}>
-                <X className="hover:text-primary" />
+                <X />
               </button>
             </div>
 
+            {error && (
+              <div className="mb-4 rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-4">
               <input
-                name="title"
-                placeholder="Course title"
+                placeholder="Course Title"
                 value={form.title}
-                onChange={handleChange}
-                className="w-full rounded-lg border bg-transparent px-4 py-2"
+                onChange={e =>
+                  setForm({ ...form, title: e.target.value })
+                }
+                className="w-full rounded-xl border px-4 py-3 focus:ring-2 focus:ring-primary/30 outline-none"
               />
 
               <textarea
-                name="desc"
-                rows={3}
-                placeholder="Short description"
-                value={form.desc}
-                onChange={handleChange}
-                className="w-full rounded-lg border bg-transparent px-4 py-2"
+                rows={4}
+                placeholder="Course Description"
+                value={form.description}
+                onChange={e =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                className="w-full rounded-xl border px-4 py-3 focus:ring-2 focus:ring-primary/30 outline-none"
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <select
-                  name="level"
-                  value={form.level}
-                  onChange={handleChange}
-                  className="rounded-lg border bg-transparent px-3 py-2"
-                >
-                  <option>Beginner</option>
-                  <option>Intermediate</option>
-                  <option>Advanced</option>
-                </select>
-
-                <select
-                  name="badge"
                   value={form.badge}
-                  onChange={handleChange}
-                  className="rounded-lg border bg-transparent px-3 py-2"
+                  onChange={e =>
+                    setForm({ ...form, badge: e.target.value })
+                  }
+                  className="rounded-xl border px-4 py-3"
                 >
                   <option>Free</option>
                   <option>Paid</option>
                   <option>Popular</option>
                 </select>
-              </div>
 
-              <input
-                type="file"
-                accept="image/*"
-                disabled={uploading}
-                onChange={handleImage}
-                className="w-full cursor-pointer text-sm"
-              />
-
-              {uploading && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 size={16} className="animate-spin" />
-                  Uploading image...
-                </div>
-              )}
-
-              {form.imageUrl && (
-                <img
-                  src={form.imageUrl}
-                  className="h-40 w-full rounded-lg object-cover border"
+                <input
+                  type="number"
+                  placeholder="Order"
+                  value={form.order}
+                  onChange={e =>
+                    setForm({
+                      ...form,
+                      order: Number(e.target.value),
+                    })
+                  }
+                  className="rounded-xl border px-4 py-3"
                 />
-              )}
+              </div>
 
               <button
                 onClick={save}
-                disabled={uploading}
-                className="w-full rounded-full bg-primary py-2.5 font-medium text-primary-foreground hover:opacity-90 transition disabled:opacity-60"
+                disabled={saving}
+                className="w-full rounded-full bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90 transition disabled:opacity-60"
               >
-                {editing ? 'Save Changes' : 'Add Course'}
+                {saving
+                  ? 'Saving...'
+                  : editing
+                  ? 'Save Changes'
+                  : 'Add Course'}
               </button>
             </div>
           </div>

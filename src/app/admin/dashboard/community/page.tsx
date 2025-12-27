@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 export default function AdminCommunityPage() {
   const [data, setData] = useState<any>({
+    _id: '',
     title: '',
     description: '',
     points: [],
@@ -25,44 +26,82 @@ export default function AdminCommunityPage() {
     alert('Community section updated')
   }
 
+  /* ================= INPUT STYLE ================= */
+  const inputStyle = `
+    w-full rounded-xl border border-border
+    bg-background px-4 py-3 text-sm
+    placeholder:text-muted-foreground
+    transition
+    focus:border-primary
+    focus:ring-2 focus:ring-primary/30
+    outline-none
+  `
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Community Section</h1>
+      {/* HEADER */}
+      <h1 className="text-3xl font-bold">
+        Community Section
+      </h1>
 
+      {/* TITLE */}
       <input
-        className="w-full rounded-xl border px-4 py-3"
+        className={inputStyle}
         placeholder="Title"
         value={data.title}
-        onChange={e => setData({ ...data, title: e.target.value })}
-      />
-
-      <textarea
-        className="w-full rounded-xl border px-4 py-3"
-        rows={3}
-        placeholder="Description"
-        value={data.description}
-        onChange={e => setData({ ...data, description: e.target.value })}
-      />
-
-      <input
-        className="w-full rounded-xl border px-4 py-3"
-        placeholder="Points (comma separated)"
-        value={data.points.join(',')}
         onChange={e =>
-          setData({ ...data, points: e.target.value.split(',') })
+          setData({ ...data, title: e.target.value })
         }
       />
 
-      <input
-        className="w-full rounded-xl border px-4 py-3"
-        placeholder="CTA Button Text"
-        value={data.ctaText}
-        onChange={e => setData({ ...data, ctaText: e.target.value })}
+      {/* DESCRIPTION */}
+      <textarea
+        className={inputStyle}
+        rows={3}
+        placeholder="Description"
+        value={data.description}
+        onChange={e =>
+          setData({ ...data, description: e.target.value })
+        }
       />
 
+      {/* POINTS */}
+      <input
+        className={inputStyle}
+        placeholder="Points (comma separated)"
+        value={data.points.join(',')}
+        onChange={e =>
+          setData({
+            ...data,
+            points: e.target.value
+              .split(',')
+              .map((p: string) => p.trim())
+              .filter(Boolean),
+          })
+        }
+      />
+
+      {/* CTA TEXT */}
+      <input
+        className={inputStyle}
+        placeholder="CTA Button Text"
+        value={data.ctaText}
+        onChange={e =>
+          setData({ ...data, ctaText: e.target.value })
+        }
+      />
+
+      {/* SAVE BUTTON */}
       <button
         onClick={save}
-        className="rounded-full bg-primary px-8 py-3 font-semibold text-primary-foreground"
+        className="
+          cursor-pointer
+          rounded-full
+          bg-gradient-to-r from-primary to-[var(--electric-purple)]
+          px-8 py-3
+          font-semibold text-primary-foreground
+          transition hover:shadow-xl
+        "
       >
         Save Community
       </button>

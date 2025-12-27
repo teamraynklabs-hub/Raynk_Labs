@@ -1,41 +1,37 @@
 import { NextResponse } from 'next/server'
-import cloudinary from '@/lib/cloudinary'
+import { uploadImage } from '@/lib/cloudinary'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
-    const file = formData.get('file')
+    const file = formData.get('file') as File | null
 
-    if (!file || !(file instanceof File)) {
+    if (!file || file.size === 0) {
       return NextResponse.json(
         { message: 'File not found' },
         { status: 400 }
       )
     }
 
+    /* ---------- CONVERT FILE TO TEMP PATH ---------- */
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const uploadResult = await new Promise<any>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          folder: 'raynk-labs',
-          resource_type: 'image',
-          transformation: [
-            { quality: 'auto', fetch_format: 'auto' },
-          ],
-        },
-        (error, result) => {
-          if (error) reject(error)
-          resolve(result)
-        }
-      ).end(buffer)
-    })
+    const tempPath = path.join(os.tmpdir(), file.name)
+    fs.writeFileSync(tempPath, buffer)
+
+    /* ---------- UPLOAD TO CLOUDINARY ---------- */
+    const image = await uploadImage(tempPath, 'raynk-labs')
+
+    fs.unlinkSync(tempPath)
 
     return NextResponse.json(
       {
-        url: uploadResult.secure_url,
-        public_id: uploadResult.public_id,
+        url: image.url,
+        public_id: image.publicId,
       },
       { status: 200 }
     )

@@ -106,12 +106,12 @@ export default function FormModal({
     setLoading(true)
 
     try {
-      const res = await fetch('/api/submit', {
+      const res = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type,
-          origin_title: displayTitle,
+          originTitle: displayTitle,
           ...formData,
         }),
       })

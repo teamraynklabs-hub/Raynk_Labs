@@ -1,6 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import * as XLSX from 'xlsx'
+import {
+  Mail,
+  Phone,
+  CheckCircle,
+  Clock,
+  Filter,
+  Download,
+} from 'lucide-react'
 
 type Submission = {
   _id: string
@@ -9,6 +18,7 @@ type Submission = {
   name: string
   email: string
   phone?: string
+  message?: string
   isRead: boolean
   createdAt: string
 }
@@ -17,12 +27,10 @@ export default function SubmissionsPage() {
   const [data, setData] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
 
-  /* filters */
   const [type, setType] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
 
-  /* ================= FETCH ================= */
   async function fetchData() {
     setLoading(true)
 
@@ -31,10 +39,10 @@ export default function SubmissionsPage() {
     if (from) params.append('from', from)
     if (to) params.append('to', to)
 
-    const res = await fetch('/api/admin/submissions?' + params.toString())
+    const res = await fetch('/api/submissions?' + params)
     const json = await res.json()
 
-    setData(json)
+    setData(json.data || [])
     setLoading(false)
   }
 
@@ -42,77 +50,67 @@ export default function SubmissionsPage() {
     fetchData()
   }, [])
 
-  /* ================= ACTIONS ================= */
-  async function markRead(id: string) {
-    await fetch(`/api/admin/submissions/${id}`, { method: 'PATCH' })
+  async function toggleRead(id: string, value: boolean) {
+    await fetch('/api/submissions', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, isRead: value }),
+    })
     fetchData()
   }
 
   async function remove(id: string) {
     if (!confirm('Delete this submission?')) return
-    await fetch(`/api/admin/submissions/${id}`, { method: 'DELETE' })
+    await fetch('/api/submissions?id=' + id, { method: 'DELETE' })
     fetchData()
   }
 
-  function exportCSV() {
-    if (!data.length) return
+  function exportExcel() {
+    const rows = data.map(d => ({
+      Type: d.type,
+      Purpose: d.originTitle || '',
+      Name: d.name,
+      Email: d.email,
+      Phone: d.phone || '',
+      Message: d.message || '',
+      Status: d.isRead ? 'Read' : 'Unread',
+      Time: new Date(d.createdAt).toLocaleString(),
+    }))
 
-    const header = [
-      'Type',
-      'Title',
-      'Name',
-      'Email',
-      'Phone',
-      'Read',
-      'Time',
-    ]
-
-    const rows = data.map(d => [
-      d.type,
-      d.originTitle || '',
-      d.name,
-      d.email,
-      d.phone || '',
-      d.isRead ? 'Yes' : 'No',
-      new Date(d.createdAt).toLocaleString(),
-    ])
-
-    const csv =
-      [header, ...rows].map(r => r.join(',')).join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'submissions.csv'
-    a.click()
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Submissions')
+    XLSX.writeFile(wb, 'submissions.xlsx')
   }
 
-  /* ================= UI ================= */
+  const unread = data.filter(d => !d.isRead)
+  const read = data.filter(d => d.isRead)
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold">Form Submissions</h1>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm text-muted-foreground">
           All user enquiries and requests
         </p>
       </div>
 
-      {/* FILTERS */}
-      <div className="flex flex-wrap gap-3">
+      {/* FILTER BAR */}
+      <div className="flex flex-wrap gap-4 rounded-xl border bg-card p-4">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Filter size={16} /> Filters
+        </div>
+
         <select
           value={type}
           onChange={e => setType(e.target.value)}
-          className="rounded-lg border px-3 py-2 text-sm"
+          className="rounded-lg border px-3 py-2 text-sm cursor-pointer"
         >
           <option value="">All Types</option>
           <option value="service">Service</option>
           <option value="course">Course</option>
           <option value="contact">Contact</option>
-          <option value="community">Community</option>
-          <option value="meetup">Meetup</option>
         </select>
 
         <input
@@ -131,79 +129,146 @@ export default function SubmissionsPage() {
 
         <button
           onClick={fetchData}
-          className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground"
+          className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground cursor-pointer"
         >
           Apply
         </button>
 
         <button
-          onClick={exportCSV}
-          className="rounded-lg border px-4 py-2 text-sm"
+          onClick={exportExcel}
+          className="rounded-lg border px-4 py-2 text-sm cursor-pointer flex items-center gap-2"
         >
-          Export CSV
+          <Download size={14} /> Export Excel
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-auto rounded-xl border">
+      {/* UNREAD */}
+      <Section
+        title="New / Unread"
+        icon={<Clock size={18} />}
+        data={unread}
+        toggleRead={toggleRead}
+        remove={remove}
+        loading={loading}
+      />
+
+      {/* READ */}
+      <Section
+        title="Seen"
+        icon={<CheckCircle size={18} />}
+        data={read}
+        toggleRead={toggleRead}
+        remove={remove}
+        loading={loading}
+      />
+    </div>
+  )
+}
+
+/* ================= TABLE SECTION ================= */
+function Section({
+  title,
+  icon,
+  data,
+  toggleRead,
+  remove,
+  loading,
+}: any) {
+  return (
+    <div className="space-y-3">
+      <h2 className="flex items-center gap-2 font-semibold">
+        {icon} {title}
+      </h2>
+
+      <div className="rounded-xl border overflow-x-auto">
         {loading ? (
           <p className="p-6 text-center">Loading...</p>
-        ) : data.length === 0 ? (
-          <p className="p-6 text-center text-muted-foreground">
-            No submissions found
-          </p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="min-w-[1400px] w-full text-sm">
             <thead className="bg-muted">
               <tr>
-                <th className="p-3 text-left">Type</th>
-                <th className="p-3 text-left">Title</th>
-                <th className="p-3 text-left">Name</th>
-                <th className="p-3 text-left">Email</th>
-                <th className="p-3 text-left">Phone</th>
-                <th className="p-3 text-left">Time</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Actions</th>
+                <th className="p-3">Read</th>
+                <th className="p-3">Type</th>
+                <th className="p-3">Purpose</th>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Phone</th>
+                <th className="p-3">Message</th>
+                <th className="p-3">Time</th>
+                <th className="p-3">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {data.map(item => (
+              {data.map((d: Submission) => (
                 <tr
-                  key={item._id}
-                  className={`border-t ${
-                    !item.isRead ? 'bg-primary/5' : ''
-                  }`}
+                  key={d._id}
+                  className="border-t hover:bg-muted/50 transition"
                 >
-                  <td className="p-3 capitalize">{item.type}</td>
-                  <td className="p-3">{item.originTitle || '-'}</td>
-                  <td className="p-3">{item.name}</td>
-                  <td className="p-3">{item.email}</td>
-                  <td className="p-3">{item.phone || '-'}</td>
-                  <td className="p-3">
-                    {new Date(item.createdAt).toLocaleString()}
+                  <td className="p-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={d.isRead}
+                      onChange={() => toggleRead(d._id, !d.isRead)}
+                      className="cursor-pointer"
+                    />
                   </td>
+
+                  <td className="p-3 capitalize">{d.type}</td>
+                  <td className="p-3">{d.originTitle || '-'}</td>
+                  <td className="p-3 font-medium">{d.name}</td>
+
                   <td className="p-3">
-                    {item.isRead ? 'Read' : 'Unread'}
+                    <a
+                      href={`mailto:${d.email}`}
+                      className="flex items-center gap-2 text-primary cursor-pointer"
+                    >
+                      <Mail size={14} /> {d.email}
+                    </a>
                   </td>
-                  <td className="p-3 space-x-2">
-                    {!item.isRead && (
-                      <button
-                        onClick={() => markRead(item._id)}
-                        className="text-xs underline"
+
+                  <td className="p-3">
+                    {d.phone ? (
+                      <a
+                        href={`tel:${d.phone}`}
+                        className="flex items-center gap-2 text-primary cursor-pointer"
                       >
-                        Mark Read
-                      </button>
+                        <Phone size={14} /> {d.phone}
+                      </a>
+                    ) : (
+                      '-'
                     )}
+                  </td>
+
+                  <td className="p-3 max-w-[300px] break-words">
+                    {d.message || '-'}
+                  </td>
+
+                  <td className="p-3">
+                    {new Date(d.createdAt).toLocaleString()}
+                  </td>
+
+                  <td className="p-3">
                     <button
-                      onClick={() => remove(item._id)}
-                      className="text-xs text-destructive underline"
+                      onClick={() => remove(d._id)}
+                      className="text-destructive underline cursor-pointer"
                     >
                       Delete
                     </button>
                   </td>
                 </tr>
               ))}
+
+              {!data.length && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="p-6 text-center text-muted-foreground"
+                  >
+                    No records found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}

@@ -2,9 +2,12 @@ import mongoose from 'mongoose'
 
 const ProjectSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
-    tech: [{ type: String }],
+    name: { type: String, required: true }, 
+    description: { type: String, required: true }, 
+    tech: {
+      type: [String],
+      default: [],
+    },
     url: String,
     icon: String,
     status: {

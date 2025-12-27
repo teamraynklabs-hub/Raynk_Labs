@@ -47,12 +47,12 @@ export default function ContactCard() {
     }
 
     try {
-      const res = await fetch('/api/submit', {
+      const res = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'contact',
-          origin_title: 'Contact Form',
+          originTitle: 'Contact Form',
           ...formData,
         }),
       })

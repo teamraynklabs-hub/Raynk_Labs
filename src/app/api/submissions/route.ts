@@ -125,7 +125,7 @@ export async function PUT(req: Request) {
     await connectDB()
     const body = await req.json()
 
-    const { id, status, adminNote } = body
+    const { id, isRead } = body
 
     if (!id) {
       return NextResponse.json(
@@ -136,10 +136,7 @@ export async function PUT(req: Request) {
 
     const updated = await Submission.findByIdAndUpdate(
       id,
-      {
-        ...(status && { status }),
-        ...(adminNote && { adminNote }),
-      },
+      { ...(typeof isRead === 'boolean' && { isRead }) },
       { new: true }
     )
 
@@ -163,6 +160,7 @@ export async function PUT(req: Request) {
     )
   }
 }
+
 
 /* =====================================================
    DELETE (DELETE) – ADMIN ONLY

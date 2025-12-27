@@ -1,219 +1,220 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Plus,
-  X,
-  FolderGit2,
   Edit,
   Trash2,
+  X,
   ExternalLink,
 } from 'lucide-react'
 
-type Project = {
-  id: number
-  title: string
-  desc: string
-  tech: string
-  status: 'Live' | 'Coming Soon'
+interface Project {
+  _id: string
+  name: string
+  description: string
+  tech: string[]
   url?: string
-  imageUrl?: string
+  status: 'Live' | 'Coming Soon'
 }
 
-export default function ProjectsManager() {
-  /* TEMP DATA (Replace with API) */
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: 1,
-      title: 'AI Resume Builder',
-      desc: 'Generate professional resumes using AI.',
-      tech: 'Next.js, OpenAI, Tailwind',
-      status: 'Live',
-      url: 'https://example.com',
-    },
-    {
-      id: 2,
-      title: 'Student Community App',
-      desc: 'Community platform for student collaboration.',
-      tech: 'React, Node, MongoDB',
-      status: 'Coming Soon',
-    },
-  ])
-
+export default function AdminProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([])
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
 
-  const [form, setForm] = useState<Project>({
-    id: 0,
+  const [form, setForm] = useState({
     title: '',
     desc: '',
     tech: '',
-    status: 'Live',
     url: '',
-    imageUrl: '',
+    status: 'Live',
   })
 
-  /* ---------------- HANDLERS ---------------- */
-
-  function handleChange(e: any) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  async function load() {
+    const res = await fetch('/api/projects', { cache: 'no-store' })
+    setProjects(await res.json())
   }
 
-  function handleImage(e: any) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setForm({ ...form, imageUrl: URL.createObjectURL(file) })
-    // TODO: Upload to backend
-  }
+  useEffect(() => {
+    load()
+  }, [])
 
   function openAdd() {
     setEditing(null)
     setForm({
-      id: 0,
       title: '',
       desc: '',
       tech: '',
-      status: 'Live',
       url: '',
-      imageUrl: '',
+      status: 'Live',
     })
     setOpen(true)
   }
 
-  function openEdit(item: Project) {
-    setEditing(item)
-    setForm(item)
+  function openEdit(p: Project) {
+    setEditing(p)
+    setForm({
+      title: p.name,
+      desc: p.description,
+      tech: p.tech.join(', '),
+      url: p.url || '',
+      status: p.status,
+    })
     setOpen(true)
   }
 
-  function close() {
-    setOpen(false)
-    setEditing(null)
-  }
-
-  function save() {
-    if (!form.title.trim()) {
-      alert('Project title required')
+  async function save() {
+    if (!form.title.trim() || !form.desc.trim()) {
+      alert('Title and description required')
       return
     }
 
-    if (editing) {
-      setProjects(prev =>
-        prev.map(p => (p.id === editing.id ? { ...editing, ...form } : p))
-      )
-    } else {
-      setProjects(prev => [{ ...form, id: Date.now() }, ...prev])
-    }
+    await fetch('/api/projects', {
+      method: editing ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editing?._id,
+        title: form.title,
+        desc: form.desc,
+        tech: form.tech,
+        url: form.url,
+        status: form.status,
+      }),
+    })
 
-    // TODO: POST / PATCH API
-    close()
+    setOpen(false)
+    load()
   }
 
-  function remove(id: number) {
-    if (!confirm('Delete this project?')) return
-    setProjects(prev => prev.filter(p => p.id !== id))
-    // TODO: DELETE API
-  }
+  async function remove(id: string) {
+    if (!confirm('Delete project?')) return
 
-  /* ---------------- UI ---------------- */
+    await fetch('/api/projects', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+
+    load()
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 sm:px-6">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage all real-world and internal projects.
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Projects
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            Manage all real-world and internal projects
           </p>
         </div>
 
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-primary-foreground hover:opacity-90 transition"
+          className="
+            inline-flex items-center gap-2
+            rounded-full bg-gradient-to-r
+            from-primary to-[var(--electric-purple)]
+            px-6 py-3 font-semibold text-primary-foreground
+            transition hover:opacity-90
+            focus:outline-none focus:ring-2 focus:ring-primary/40
+          "
         >
-          <Plus size={18} /> Add Project
+          <Plus size={18} />
+          Add Project
         </button>
       </div>
 
       {/* GRID */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map(project => (
+        {projects.map(p => (
           <div
-            key={project.id}
+            key={p._id}
             className="
-              group relative rounded-2xl border border-border bg-card p-5
+              group relative rounded-2xl
+              border border-border bg-card p-6
               transition-all duration-300
-              hover:-translate-y-1 hover:shadow-xl
+              hover:-translate-y-1 hover:shadow-2xl
             "
           >
             {/* STATUS */}
             <span
               className={`
-                absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold
-                ${project.status === 'Live'
-                  ? 'bg-primary/15 text-primary'
-                  : 'bg-yellow-400/20 text-yellow-400'}
+                absolute right-4 top-4 rounded-full
+                px-3 py-1 text-xs font-semibold
+                ${
+                  p.status === 'Live'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-yellow-400/20 text-yellow-400'
+                }
               `}
             >
-              {project.status}
+              {p.status}
             </span>
 
-            {/* IMAGE */}
-            <div className="mb-4 flex h-36 items-center justify-center rounded-xl bg-muted overflow-hidden">
-              {project.imageUrl ? (
-                <img
-                  src={project.imageUrl}
-                  alt={project.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <FolderGit2 size={36} className="text-muted-foreground" />
-              )}
-            </div>
+            {/* TITLE */}
+            <h3 className="mt-2 text-lg font-bold">
+              {p.name}
+            </h3>
 
-            {/* CONTENT */}
-            <h3 className="text-lg font-semibold">{project.title}</h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {project.desc}
+            <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
+              {p.description}
             </p>
 
-            {/* TECH STACK */}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {project.tech.split(',').map((t, i) => (
+            {/* TECH */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {p.tech.map(t => (
                 <span
-                  key={i}
-                  className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+                  key={t}
+                  className="
+                    rounded-full border border-primary/20
+                    bg-primary/10 px-3 py-1
+                    text-xs font-medium text-primary
+                  "
                 >
-                  {t.trim()}
+                  {t}
                 </span>
               ))}
             </div>
 
             {/* ACTIONS */}
-            <div className="mt-4 flex justify-between items-center">
+            <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
               <div className="flex gap-2">
                 <button
-                  onClick={() => openEdit(project)}
-                  className="rounded-lg border px-3 py-1.5 hover:bg-accent transition"
+                  onClick={() => openEdit(p)}
+                  className="
+                    rounded-lg border border-border
+                    p-2 transition
+                    hover:bg-accent
+                  "
                 >
                   <Edit size={16} />
                 </button>
 
                 <button
-                  onClick={() => remove(project.id)}
-                  className="rounded-lg border border-destructive/30 px-3 py-1.5 text-destructive hover:bg-destructive/10 transition"
+                  onClick={() => remove(p._id)}
+                  className="
+                    rounded-lg border border-destructive/40
+                    p-2 text-destructive
+                    transition hover:bg-destructive/10
+                  "
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
 
-              {project.url && project.status === 'Live' && (
+              {p.url && (
                 <a
-                  href={project.url}
+                  href={p.url}
                   target="_blank"
-                  className="text-primary hover:underline flex items-center gap-1 text-sm"
+                  className="
+                    flex items-center gap-1
+                    text-sm font-medium text-primary
+                    hover:underline
+                  "
                 >
                   Visit <ExternalLink size={14} />
                 </a>
@@ -225,84 +226,82 @@ export default function ProjectsManager() {
 
       {/* MODAL */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 animate-in fade-in zoom-in">
-            {/* HEADER */}
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
+          <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold">
                 {editing ? 'Edit Project' : 'Add Project'}
               </h2>
-              <button onClick={close}>
-                <X className="hover:text-primary" />
+              <button
+                onClick={() => setOpen(false)}
+                className="rounded-lg p-1 hover:bg-accent"
+              >
+                <X />
               </button>
             </div>
 
-            {/* FORM */}
             <div className="space-y-4">
-              <input
-                name="title"
-                placeholder="Project title"
-                value={form.title}
-                onChange={handleChange}
-                className="w-full rounded-lg border bg-transparent px-4 py-2"
-              />
+              {[
+                {
+                  placeholder: 'Project Title',
+                  value: form.title,
+                  onChange: (v: string) =>
+                    setForm({ ...form, title: v }),
+                },
+                {
+                  placeholder: 'Tech (comma separated)',
+                  value: form.tech,
+                  onChange: (v: string) =>
+                    setForm({ ...form, tech: v }),
+                },
+                {
+                  placeholder: 'Live URL https://...',
+                  value: form.url,
+                  onChange: (v: string) =>
+                    setForm({ ...form, url: v }),
+                },
+              ].map((f, i) => (
+                <input
+                  key={i}
+                  value={f.value}
+                  onChange={e => f.onChange(e.target.value)}
+                  placeholder={f.placeholder}
+                  className="
+                    w-full rounded-xl border border-input
+                    bg-background px-4 py-3 text-sm
+                    placeholder:text-muted-foreground
+                    transition focus:border-primary
+                    focus:ring-2 focus:ring-primary/30 outline-none
+                  "
+                />
+              ))}
 
               <textarea
-                name="desc"
-                rows={3}
-                placeholder="Short description"
+                rows={4}
+                placeholder="Project description"
                 value={form.desc}
-                onChange={handleChange}
-                className="w-full rounded-lg border bg-transparent px-4 py-2"
+                onChange={e =>
+                  setForm({ ...form, desc: e.target.value })
+                }
+                className="
+                  w-full rounded-xl border border-input
+                  bg-background px-4 py-3 text-sm
+                  placeholder:text-muted-foreground
+                  transition focus:border-primary
+                  focus:ring-2 focus:ring-primary/30 outline-none
+                "
               />
-
-              <input
-                name="tech"
-                placeholder="Tech stack (comma separated)"
-                value={form.tech}
-                onChange={handleChange}
-                className="w-full rounded-lg border bg-transparent px-4 py-2"
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className="rounded-lg border bg-transparent px-3 py-2"
-                >
-                  <option>Live</option>
-                  <option>Coming Soon</option>
-                </select>
-
-                <input
-                  name="url"
-                  placeholder="Live URL (optional)"
-                  value={form.url}
-                  onChange={handleChange}
-                  className="rounded-lg border bg-transparent px-4 py-2"
-                />
-              </div>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
-                className="w-full cursor-pointer text-sm"
-              />
-
-              {form.imageUrl && (
-                <img
-                  src={form.imageUrl}
-                  className="h-40 w-full rounded-lg object-cover border"
-                />
-              )}
 
               <button
                 onClick={save}
-                className="w-full rounded-full bg-primary py-2.5 font-medium text-primary-foreground hover:opacity-90 transition"
+                className="
+                  w-full rounded-full
+                  bg-gradient-to-r from-primary to-[var(--electric-purple)]
+                  py-3 font-semibold text-primary-foreground
+                  transition hover:opacity-90
+                "
               >
-                {editing ? 'Save Changes' : 'Add Project'}
+                Save Project
               </button>
             </div>
           </div>

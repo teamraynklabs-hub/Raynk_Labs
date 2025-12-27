@@ -1,109 +1,88 @@
 'use client'
 
-import Link from 'next/link'
-import {
-  Briefcase,
-  GraduationCap,
-  Layers,
-  Users,
-  Settings,
-} from 'lucide-react'
-
-const dashboardCards = [
-  {
-    title: 'Services',
-    desc: 'Manage all services shown on the website.',
-    href: '/admin/dashboard/services',
-    icon: Briefcase,
-  },
-  {
-    title: 'Courses',
-    desc: 'Create, update and control course listings.',
-    href: '/admin/dashboard/courses',
-    icon: GraduationCap,
-  },
-  {
-    title: 'Projects',
-    desc: 'Showcase and manage completed projects.',
-    href: '/admin/dashboard/projects',
-    icon: Layers,
-  },
-  {
-    title: 'Softwares',
-    desc: 'Manage internal & public software tools.',
-    href: '/admin/dashboard/softwares',
-    icon: Settings,
-  },
-  {
-    title: 'Team',
-    desc: 'Add or update team members and roles.',
-    href: '/admin/dashboard/team',
-    icon: Users,
-  },
-]
+import { motion } from 'framer-motion'
 
 export default function AdminDashboardHome() {
   return (
-    <div className="space-y-10">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Admin Dashboard
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Control all RaYnk Labs website content from one place.
-        </p>
+    <section className="relative flex min-h-[calc(100vh-80px)] items-center justify-center overflow-hidden">
+      {/* CONTENT */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        className="relative z-10 text-center"
+      >
+        {/* MAIN HEADING */}
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="
+            bg-gradient-to-r from-primary to-[var(--electric-purple)]
+            bg-clip-text text-transparent
+            text-4xl font-extrabold tracking-tight
+            sm:text-5xl md:text-6xl lg:text-7xl
+          "
+        >
+          Welcome to RaYnk Labs
+        </motion.h1>
+
+        {/* SUB HEADING */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="
+            mt-4 text-lg font-medium
+            text-muted-foreground
+            sm:text-xl md:text-2xl
+          "
+        >
+          Admin Control Panel
+        </motion.p>
+
+        {/* DIVIDER */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="
+            mx-auto mt-6 h-[3px] w-24
+            origin-left rounded-full
+            bg-gradient-to-r from-primary to-[var(--electric-purple)]
+          "
+        />
+
+        {/* DESCRIPTION */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.6 }}
+          className="
+            mx-auto mt-8 max-w-2xl
+            text-sm text-muted-foreground
+            sm:text-base md:text-lg
+          "
+        >
+          Manage website content, users, projects, services and internal data
+          securely from one centralized admin workspace.
+        </motion.p>
+      </motion.div>
+
+      {/* SOFT ANIMATED GLOW */}
+      <div className="pointer-events-none absolute inset-0">
+        <motion.div
+          animate={{ opacity: [0.2, 0.35, 0.2] }}
+          transition={{ duration: 6, repeat: Infinity }}
+          className="
+            absolute left-1/2 top-1/2
+            h-[320px] w-[320px]
+            -translate-x-1/2 -translate-y-1/2
+            rounded-full
+            bg-primary/20 blur-[120px]
+          "
+        />
       </div>
-
-      {/* CARDS */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {dashboardCards.map((item, index) => {
-          const Icon = item.icon
-
-          return (
-            <Link
-              key={index}
-              href={item.href}
-              className="
-                group relative overflow-hidden
-                rounded-2xl border border-border bg-card
-                p-6 transition-all duration-300
-                hover:-translate-y-1 hover:shadow-xl
-              "
-            >
-              {/* SOFT GLOW */}
-              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                <div className="absolute -inset-12 bg-gradient-to-r from-primary/10 to-[var(--electric-purple)]/10 blur-2xl" />
-              </div>
-
-              <div className="relative z-10">
-                {/* ICON */}
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Icon size={22} />
-                </div>
-
-                {/* CONTENT */}
-                <h3 className="text-lg font-semibold">
-                  {item.title}
-                </h3>
-
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {item.desc}
-                </p>
-
-                <span className="mt-5 inline-block text-sm font-medium text-primary">
-                  Manage →
-                </span>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* INFO BOX */}
-      <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-        Tip: Use the sidebar to quickly switch between sections and manage content efficiently.
-      </div>
-    </div>
+    </section>
   )
 }

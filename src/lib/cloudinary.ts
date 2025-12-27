@@ -6,7 +6,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-export async function uploadImage(
+export  async function uploadImage(
   filePath: string,
   folder: string
 ) {

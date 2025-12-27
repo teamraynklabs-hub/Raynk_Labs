@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Project from '@/lib/models/Project'
 
-/* ======================
-   GET → Public Projects
-====================== */
+/* ========= GET ========= */
 export async function GET() {
   try {
     await connectDB()
@@ -20,17 +18,37 @@ export async function GET() {
   }
 }
 
-/* ======================
-   POST → Admin Create
-====================== */
+/* ========= POST ========= */
 export async function POST(req: Request) {
   try {
     await connectDB()
     const body = await req.json()
 
-    const project = await Project.create(body)
+    const { title, desc, tech, url, status, icon } = body
+
+    if (!title || !desc) {
+      return NextResponse.json(
+        { message: 'Title and description required' },
+        { status: 400 }
+      )
+    }
+
+    const project = await Project.create({
+      name: title,
+      description: desc,
+      tech: Array.isArray(tech)
+        ? tech
+        : typeof tech === 'string'
+        ? tech.split(',').map((t: string) => t.trim())
+        : [],
+      url,
+      status,
+      icon,
+    })
+
     return NextResponse.json(project, { status: 201 })
-  } catch {
+  } catch (error) {
+    console.error('POST Project Error:', error)
     return NextResponse.json(
       { message: 'Failed to create project' },
       { status: 500 }
@@ -38,17 +56,36 @@ export async function POST(req: Request) {
   }
 }
 
-/* ======================
-   PUT → Admin Update
-====================== */
+/* ========= PUT ========= */
 export async function PUT(req: Request) {
   try {
     await connectDB()
-    const { id, ...data } = await req.json()
+    const { id, title, desc, tech, url, status, icon } =
+      await req.json()
 
-    const updated = await Project.findByIdAndUpdate(id, data, {
-      new: true,
-    })
+    if (!id) {
+      return NextResponse.json(
+        { message: 'Project ID required' },
+        { status: 400 }
+      )
+    }
+
+    const updated = await Project.findByIdAndUpdate(
+      id,
+      {
+        name: title,
+        description: desc,
+        tech: Array.isArray(tech)
+          ? tech
+          : typeof tech === 'string'
+          ? tech.split(',').map((t: string) => t.trim())
+          : [],
+        url,
+        status,
+        icon,
+      },
+      { new: true }
+    )
 
     return NextResponse.json(updated)
   } catch {
@@ -58,9 +95,8 @@ export async function PUT(req: Request) {
     )
   }
 }
-/* ======================
-   DELETE → Admin Remove (SOFT DELETE)
-====================== */
+
+/* ========= DELETE (Soft) ========= */
 export async function DELETE(req: Request) {
   try {
     await connectDB()
@@ -73,25 +109,10 @@ export async function DELETE(req: Request) {
       )
     }
 
-    const deleted = await Project.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    )
+    await Project.findByIdAndUpdate(id, { isActive: false })
 
-    if (!deleted) {
-      return NextResponse.json(
-        { message: 'Project not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Project removed successfully',
-    })
-  } catch (error) {
-    console.error('DELETE Project Error:', error)
+    return NextResponse.json({ success: true })
+  } catch {
     return NextResponse.json(
       { message: 'Failed to delete project' },
       { status: 500 }
