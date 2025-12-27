@@ -26,7 +26,7 @@ export default function AdminMeetups() {
 
   /* ================= LOAD ================= */
   async function load() {
-    const res = await fetch('/api/admin/meetups', { cache: 'no-store' })
+    const res = await fetch('/api/meetups', { cache: 'no-store' })
     setData(await res.json())
   }
 
@@ -82,7 +82,7 @@ export default function AdminMeetups() {
       return
     }
 
-    await fetch('/api/admin/meetups', {
+    await fetch('/api/meetups', {
       method: editing ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(
@@ -98,7 +98,7 @@ export default function AdminMeetups() {
   async function remove(id: string) {
     if (!confirm('Delete this meetup?')) return
 
-    await fetch('/api/admin/meetups', {
+    await fetch('/api/meetups', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
