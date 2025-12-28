@@ -251,7 +251,7 @@ export default function TeamManager() {
             </div>
 
             <div className="space-y-4">
-              {['name', 'role', 'skills', 'github', 'linkedin', 'portfolio'].map(f => (
+              {['name', 'role', 'skills eg : canva,webdev,design', 'github', 'linkedin', 'portfolio'].map(f => (
                 <input
                   key={f}
                   name={f}
