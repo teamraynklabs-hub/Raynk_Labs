@@ -1,10 +1,9 @@
 'use client'
 
-import ProjectsCard from "@/components/cards/ProjectCard"
+import dynamic from 'next/dynamic'
 
+const ProjectsCard = dynamic(() => import('@/components/cards/ProjectCard'))
 
 export default function ProjectsPage() {
-  return (
-    <ProjectsCard />
-  )
+  return <ProjectsCard />
 }

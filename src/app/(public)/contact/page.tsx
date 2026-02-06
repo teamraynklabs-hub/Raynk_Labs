@@ -1,10 +1,10 @@
 'use client'
 
-import ContactCard from "@/components/cards/ContactCard"
+import dynamic from 'next/dynamic'
 
+const ContactCard = dynamic(() => import('@/components/cards/ContactCard'))
 
 export default function Contact() {
-  
   return (
     <div>
       <ContactCard />

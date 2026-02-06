@@ -1,11 +1,10 @@
 'use client'
 
-import ServicesCard from "@/components/cards/ServiceCard"
+import dynamic from 'next/dynamic'
 
+const ServicesCard = dynamic(() => import('@/components/cards/ServiceCard'))
 
 export default function Services() {
-  
-
   return (
     <div>
       <ServicesCard />

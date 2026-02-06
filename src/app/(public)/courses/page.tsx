@@ -1,8 +1,10 @@
 'use client'
-import CourseCard from '@/components/cards/CourseCard'
-export default function Courses() {
-  
 
+import dynamic from 'next/dynamic'
+
+const CourseCard = dynamic(() => import('@/components/cards/CourseCard'))
+
+export default function Courses() {
   return (
     <div>
       <CourseCard />

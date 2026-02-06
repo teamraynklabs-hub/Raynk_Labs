@@ -1,19 +1,23 @@
 'use client'
 
-/* =======================
-   SECTION IMPORTS
-======================= */
+import dynamic from 'next/dynamic'
 import Hero from '@/components/cards/Hero'
-import AboutPage from '@/components/cards/About'
-import ServiceCard from '@/components/cards/ServiceCard'
-import SoftwareCard from '@/components/cards/SoftwareCard'
-import Community from '@/components/cards/Community'
-import TeamCard from '@/components/cards/TeamCard'
-import Meetups from '@/components/cards/Meetups'
-import UpcomingProject from '@/components/cards/UpcomingProject'
-import ContactCard from '@/components/cards/ContactCard'
-import CourseCard from '@/components/cards/CourseCard'
-import ProjectsCard from '@/components/cards/ProjectCard'
+import LazySection from '@/components/LazySection'
+
+/* =======================
+   LAZY SECTION IMPORTS
+   — bundles only load when the user scrolls near each section
+======================= */
+const AboutPage = dynamic(() => import('@/components/cards/About'))
+const ServiceCard = dynamic(() => import('@/components/cards/ServiceCard'))
+const CourseCard = dynamic(() => import('@/components/cards/CourseCard'))
+const SoftwareCard = dynamic(() => import('@/components/cards/SoftwareCard'))
+const UpcomingProject = dynamic(() => import('@/components/cards/UpcomingProject'))
+const Community = dynamic(() => import('@/components/cards/Community'))
+const ProjectsCard = dynamic(() => import('@/components/cards/ProjectCard'))
+const Meetups = dynamic(() => import('@/components/cards/Meetups'))
+const TeamCard = dynamic(() => import('@/components/cards/TeamCard'))
+const ContactCard = dynamic(() => import('@/components/cards/ContactCard'))
 
 /* =======================
    HOME PAGE
@@ -22,45 +26,64 @@ export default function Home() {
   return (
     <main
       className="
-        min-h-screen 
-        w-full 
-        bg-background 
+        min-h-screen
+        w-full
+        bg-background
         text-foreground
       "
     >
-      {/* ================= HERO ================= */}
+      {/* ================= HERO (eager — above the fold) ================= */}
       <Hero />
 
       {/* ================= ABOUT ================= */}
-      <AboutPage />
+      <LazySection minHeight="400px">
+        <AboutPage />
+      </LazySection>
 
       {/* ================= SERVICES ================= */}
-      <ServiceCard />
+      <LazySection minHeight="400px">
+        <ServiceCard />
+      </LazySection>
 
       {/* ================= COURSES ================= */}
-      <CourseCard />
+      <LazySection minHeight="400px">
+        <CourseCard />
+      </LazySection>
 
       {/* ================= SOFTWARE / TOOLS ================= */}
-      <SoftwareCard />
+      <LazySection minHeight="400px">
+        <SoftwareCard />
+      </LazySection>
 
       {/* ================= TURNING POINT ================= */}
-      <UpcomingProject />
+      <LazySection minHeight="400px">
+        <UpcomingProject />
+      </LazySection>
 
       {/* ================= COMMUNITY ================= */}
-      <Community />
+      <LazySection minHeight="400px">
+        <Community />
+      </LazySection>
 
       {/* ================= PROJECTS ================= */}
-      <ProjectsCard />
-
+      <LazySection minHeight="400px">
+        <ProjectsCard />
+      </LazySection>
 
       {/* ================= MEETUPS / EVENTS ================= */}
-      <Meetups />
+      <LazySection minHeight="400px">
+        <Meetups />
+      </LazySection>
 
       {/* ================= TEAM ================= */}
-      <TeamCard />
+      <LazySection minHeight="400px">
+        <TeamCard />
+      </LazySection>
 
       {/* ================= CONTACT ================= */}
-      <ContactCard />
+      <LazySection minHeight="400px">
+        <ContactCard />
+      </LazySection>
     </main>
   )
 }
