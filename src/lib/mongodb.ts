@@ -32,7 +32,7 @@ export async function connectDB() {
 
     cached.promise = mongoose
       .connect(MONGODB_URI, {
-        dbName: 'raynk-labs',
+        dbName: 'raynk_labs',
       })
       .then((mongooseInstance) => {
         console.log('✅ MongoDB connected successfully')
