@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(del \"c:\\\\Users\\\\Rohit Rathod\\\\Desktop\\\\Devlopment\\\\practice\\\\src\\\\lib\\\\models\\\\Task.ts\")"
+      "Bash(del \"c:\\\\Users\\\\Rohit Rathod\\\\Desktop\\\\Devlopment\\\\practice\\\\src\\\\lib\\\\models\\\\Task.ts\")",
+      "Bash(find:*)",
+      "Bash(tree:*)"
     ]
   }
 }

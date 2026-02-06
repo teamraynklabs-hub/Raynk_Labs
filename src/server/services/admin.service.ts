@@ -30,6 +30,7 @@ import {
   ForbiddenError,
 } from '@/server/utils/errors';
 import type { CloudinaryImage } from '@/types';
+import { sendOtpEmail } from '@/lib/email';
 
 // ============================================
 // TYPES
@@ -414,21 +415,48 @@ class AdminService {
       throw new NotFoundError('Admin');
     }
 
+    // Get admin email from profile
+    const adminEmail = admin.profile?.email;
+    if (!adminEmail) {
+      throw new ValidationError(
+        'No email address found. Please update your profile with an email address.'
+      );
+    }
+
     const otp = generateOTP();
     const otpExpiry = getOTPExpiry();
+    const expiryMinutes = parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10);
 
     await Admin.findByIdAndUpdate(admin._id, {
       otp,
       otpExpiry,
     });
 
-    // In production, send OTP via SMS
-    // For development, log it
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] OTP for ${mobile}: ${otp}`);
+    // Send OTP via email
+    const emailResult = await sendOtpEmail({
+      to: adminEmail,
+      otp,
+      expiryMinutes,
+    });
+
+    if (!emailResult.success) {
+      // Clear OTP from database if email failed
+      await Admin.findByIdAndUpdate(admin._id, {
+        otp: null,
+        otpExpiry: null,
+      });
+
+      throw new Error(
+        `Failed to send OTP email: ${emailResult.error || 'Unknown error'}`
+      );
     }
 
-    return { message: 'OTP sent successfully' };
+    // In development, also log OTP for easier testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[DEV] OTP for ${mobile} (${adminEmail}): ${otp}`);
+    }
+
+    return { message: 'OTP sent to your registered email address' };
   }
 
   /**
