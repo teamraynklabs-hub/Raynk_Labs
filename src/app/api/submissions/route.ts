@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Submission from '@/lib/models/Submission'
+import { requireAdmin } from '@/lib/auth/authGuard'
 
 /* =========================
    COMMON EMAIL VALIDATION
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
 ===================================================== */
 export async function GET(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
 
     const { searchParams } = new URL(req.url)
@@ -122,6 +124,7 @@ export async function GET(req: Request) {
 ===================================================== */
 export async function PUT(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const body = await req.json()
 
@@ -167,6 +170,7 @@ export async function PUT(req: Request) {
 ===================================================== */
 export async function DELETE(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Info } from 'lucide-react'
 
 interface AboutCard {
   title: string
@@ -18,18 +18,24 @@ export default function AdminAboutPage() {
     cards: [] as AboutCard[],
   })
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   /* ================= FETCH ================= */
   useEffect(() => {
+    setLoading(true)
     fetch('/api/about')
       .then(res => res.json())
-      .then(d => d && setData(d))
+      .then(d => {
+        if (d) setData(d)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
   /* ================= SAVE ================= */
   async function save() {
-    setLoading(true)
+    setSaving(true)
     try {
       await fetch('/api/about', {
         method: data._id ? 'PUT' : 'POST',
@@ -42,7 +48,7 @@ export default function AdminAboutPage() {
     } catch {
       alert('Failed to save section')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
@@ -76,24 +82,35 @@ export default function AdminAboutPage() {
     })
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto max-w-5xl space-y-12"
+      className="space-y-6"
     >
       {/* ================= HEADER ================= */}
       <div>
-        <h1 className="text-4xl font-extrabold tracking-tight">
-          About Section
-        </h1>
-        <p className="mt-2 text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            About Section
+          </h1>
+          <Info className="text-primary" size={28} />
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage heading, description and feature cards
         </p>
       </div>
 
       {/* ================= BASIC CONTENT ================= */}
-      <div className="rounded-3xl border bg-card p-8 space-y-6">
+      <div className="rounded-2xl border border-border/50 bg-card/50 p-6 space-y-6 shadow-sm">
         <div>
           <label className="text-sm font-semibold">
             Heading
@@ -149,9 +166,9 @@ export default function AdminAboutPage() {
             className="
               flex items-center gap-2
               rounded-full
-              bg-primary px-6 py-2
+              bg-linear-to-r from-primary to-purple-600 px-6 py-2
               text-sm font-semibold text-primary-foreground
-              transition hover:opacity-90
+              transition hover:opacity-90 hover:scale-105 active:scale-95
               cursor-pointer
             "
           >
@@ -166,10 +183,11 @@ export default function AdminAboutPage() {
               key={index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
               className="
-                relative rounded-2xl border bg-card
-                p-6 space-y-4
-                transition hover:shadow-lg
+                relative rounded-2xl border border-border/50 bg-card/50
+                p-6 space-y-4 shadow-sm
+                transition hover:shadow-md
               "
             >
               <button
@@ -253,18 +271,18 @@ export default function AdminAboutPage() {
       <div className="flex justify-end">
         <button
           onClick={save}
-          disabled={loading}
+          disabled={saving}
           className="
             rounded-full
-            bg-gradient-to-r from-primary to-[var(--electric-purple)]
+            bg-linear-to-r from-primary to-purple-600
             px-10 py-3
             font-semibold text-primary-foreground
-            transition hover:shadow-xl
-            disabled:opacity-60
+            transition hover:opacity-90 hover:scale-105 active:scale-95
+            disabled:opacity-60 disabled:cursor-not-allowed
             cursor-pointer
           "
         >
-          {loading ? 'Saving…' : 'Save About Section'}
+          {saving ? 'Saving…' : 'Save About Section'}
         </button>
       </div>
     </motion.div>

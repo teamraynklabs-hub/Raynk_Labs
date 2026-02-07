@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Trash2, Plus, X, Edit } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trash2, Plus, X, Edit, Calendar } from 'lucide-react'
 
 type Meetup = {
   _id: string
@@ -13,6 +14,7 @@ type Meetup = {
 
 export default function AdminMeetups() {
   const [data, setData] = useState<Meetup[]>([])
+  const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Meetup | null>(null)
   const [error, setError] = useState('')
@@ -26,8 +28,15 @@ export default function AdminMeetups() {
 
   /* ================= LOAD ================= */
   async function load() {
-    const res = await fetch('/api/meetups', { cache: 'no-store' })
-    setData(await res.json())
+    setLoading(true)
+    try {
+      const res = await fetch('/api/meetups', { cache: 'no-store' })
+      setData(await res.json())
+    } catch {
+      setError('Failed to load meetups')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -109,12 +118,17 @@ export default function AdminMeetups() {
 
   /* ================= UI ================= */
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="space-y-6">
       {/* HEADER */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Meetups</h1>
-          <p className="mt-1 text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Meetups
+            </h1>
+            <Calendar className="text-primary" size={28} />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage meetups, masterclasses and podcasts
           </p>
         </div>
@@ -123,70 +137,83 @@ export default function AdminMeetups() {
           onClick={openAdd}
           className="
             cursor-pointer flex items-center gap-2
-            rounded-full bg-primary px-6 py-3
+            rounded-full bg-linear-to-r from-primary to-purple-600 px-6 py-3
             font-semibold text-primary-foreground
-            transition hover:opacity-90
+            transition hover:opacity-90 hover:scale-105 active:scale-95
           "
         >
           <Plus size={18} /> Add Meetup
         </button>
       </div>
 
-      {/* TABLE (DESKTOP) */}
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="p-4 text-left">Title</th>
-              <th className="p-4">Type</th>
-              <th className="p-4">Date</th>
-              <th className="p-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(item => (
-              <tr
-                key={item._id}
-                className="border-t transition hover:bg-muted/50"
-              >
+      {/* LOADING */}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : data.length === 0 ? (
+        <div className="text-center py-16 rounded-xl border border-border/50 bg-card/50">
+          <Calendar className="mx-auto text-muted-foreground mb-4" size={48} />
+          <h3 className="text-lg font-semibold mb-2">No meetups found</h3>
+          <p className="text-sm text-muted-foreground">
+            Get started by adding your first meetup, masterclass, or podcast
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* TABLE (DESKTOP) */}
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-border/50 shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="p-4 text-left">Title</th>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Date</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item, index) => (
+                  <motion.tr
+                    key={item._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-t transition hover:bg-muted/50"
+                  >
                 <td className="p-4 font-medium">{item.title}</td>
                 <td className="p-4 capitalize">{item.type}</td>
                 <td className="p-4">{item.date}</td>
-                <td className="p-4 flex justify-end gap-2">
-                  <button
-                    onClick={() => openEdit(item)}
-                    className="rounded-lg border px-3 py-2 hover:bg-accent transition"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => remove(item._id)}
-                    className="rounded-lg border border-destructive/40 px-3 py-2 text-destructive hover:bg-destructive/10 transition"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    <td className="p-4 flex justify-end gap-2">
+                      <button
+                        onClick={() => openEdit(item)}
+                        className="rounded-lg border px-3 py-2 hover:bg-accent transition cursor-pointer hover:scale-105 active:scale-95"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => remove(item._id)}
+                        className="rounded-lg border border-destructive/40 px-3 py-2 text-destructive hover:bg-destructive/10 transition cursor-pointer hover:scale-105 active:scale-95"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {!data.length && (
-              <tr>
-                <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                  No meetups added yet
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* MOBILE CARDS */}
-      <div className="space-y-4 md:hidden">
-        {data.map(item => (
-          <div
-            key={item._id}
-            className="rounded-xl border border-border bg-card p-4 space-y-2"
-          >
+          {/* MOBILE CARDS */}
+          <div className="space-y-4 md:hidden">
+            {data.map((item, index) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-2 shadow-sm"
+              >
             <h3 className="font-semibold">{item.title}</h3>
             <p className="text-sm text-muted-foreground">
               {item.description}
@@ -196,42 +223,49 @@ export default function AdminMeetups() {
               <span>{item.date}</span>
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => openEdit(item)}
-                className="flex-1 rounded-lg border py-2 hover:bg-accent transition"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => remove(item._id)}
-                className="flex-1 rounded-lg border border-destructive/40 py-2 text-destructive hover:bg-destructive/10 transition"
-              >
-                Delete
-              </button>
-            </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="flex-1 rounded-lg border py-2 hover:bg-accent transition cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => remove(item._id)}
+                    className="flex-1 rounded-lg border border-destructive/40 py-2 text-destructive hover:bg-destructive/10 transition cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        ))}
-
-        {!data.length && (
-          <p className="text-center text-muted-foreground">
-            No meetups added yet
-          </p>
-        )}
-      </div>
+        </>
+      )}
 
       {/* MODAL */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
-          <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">
-                {editing ? 'Edit Meetup' : 'Add Meetup'}
-              </h2>
-              <button onClick={close} className="cursor-pointer">
-                <X />
-              </button>
-            </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg rounded-2xl border border-border bg-card p-6"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold">
+                  {editing ? 'Edit Meetup' : 'Add Meetup'}
+                </h2>
+                <button onClick={close} className="cursor-pointer hover:bg-accent rounded-lg p-1 transition">
+                  <X />
+                </button>
+              </div>
 
             {error && (
               <div className="mb-4 rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
@@ -276,14 +310,15 @@ export default function AdminMeetups() {
 
               <button
                 onClick={save}
-                className="cursor-pointer w-full rounded-full bg-primary py-3 font-semibold text-primary-foreground transition hover:opacity-90"
+                className="cursor-pointer w-full rounded-full bg-linear-to-r from-primary to-purple-600 py-3 font-semibold text-primary-foreground transition hover:opacity-90 hover:scale-105 active:scale-95"
               >
                 {editing ? 'Save Changes' : 'Save Meetup'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Software from '@/lib/models/Software'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
+import { requireAdmin } from '@/lib/auth/authGuard'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -28,6 +29,7 @@ export async function GET() {
 ====================== */
 export async function POST(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const formData = await req.formData()
 
@@ -76,6 +78,7 @@ export async function POST(req: Request) {
 ====================== */
 export async function PUT(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const formData = await req.formData()
 
@@ -136,6 +139,7 @@ export async function PUT(req: Request) {
 ====================== */
 export async function DELETE(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const { id } = await req.json()
 

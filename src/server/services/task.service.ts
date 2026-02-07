@@ -363,7 +363,8 @@ class TaskService {
 
     // Check if already completed by this admin
     const alreadyCompleted = task.completedBy.some(
-      (c) => c.adminId.toString() === adminId
+      (c: { adminId: Types.ObjectId; completedAt: Date }) =>
+        c.adminId.toString() === adminId
     );
 
     if (alreadyCompleted) {
@@ -505,10 +506,12 @@ class TaskService {
       taskId: task._id.toString(),
       title: task.title,
       totalCompletions: task.completedBy.length,
-      completedBy: task.completedBy.map((c) => ({
-        adminId: c.adminId.toString(),
-        completedAt: c.completedAt,
-      })),
+      completedBy: task.completedBy.map(
+        (c: { adminId: Types.ObjectId; completedAt: Date }) => ({
+          adminId: c.adminId.toString(),
+          completedAt: c.completedAt,
+        })
+      ),
     }));
   }
 }

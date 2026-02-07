@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
   Edit,
   Trash2,
   X,
   ExternalLink,
+  FolderGit2,
 } from 'lucide-react'
 
 interface Project {
@@ -20,6 +22,7 @@ interface Project {
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
 
@@ -32,8 +35,10 @@ export default function AdminProjectsPage() {
   })
 
   async function load() {
+    setLoading(true)
     const res = await fetch('/api/projects', { cache: 'no-store' })
     setProjects(await res.json())
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -100,14 +105,14 @@ export default function AdminProjectsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 sm:px-6">
+    <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             Projects
           </h1>
-          <p className="mt-1 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage all real-world and internal projects
           </p>
         </div>
@@ -116,10 +121,11 @@ export default function AdminProjectsPage() {
           onClick={openAdd}
           className="
             inline-flex items-center gap-2
-            rounded-full bg-gradient-to-r
-            from-primary to-[var(--electric-purple)]
+            rounded-full bg-linear-to-r
+            from-primary to-purple-600
             px-6 py-3 font-semibold text-primary-foreground
-            transition hover:opacity-90
+            transition hover:opacity-90 cursor-pointer
+            hover:scale-105 active:scale-95
             focus:outline-none focus:ring-2 focus:ring-primary/40
           "
         >
@@ -128,18 +134,34 @@ export default function AdminProjectsPage() {
         </button>
       </div>
 
-      {/* GRID */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map(p => (
-          <div
-            key={p._id}
-            className="
-              group relative rounded-2xl
-              border border-border bg-card p-6
-              transition-all duration-300
-              hover:-translate-y-1 hover:shadow-2xl
-            "
-          >
+      {/* LOADING */}
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="text-center py-16 rounded-xl border border-border/50 bg-card/50">
+          <FolderGit2 className="mx-auto text-muted-foreground mb-4" size={48} />
+          <h3 className="text-lg font-semibold mb-2">No projects found</h3>
+          <p className="text-sm text-muted-foreground">
+            Get started by adding your first project
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((p, index) => (
+            <motion.div
+              key={p._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="
+                group relative rounded-2xl
+                border border-border/50 bg-card/50 p-6
+                shadow-sm hover:shadow-md
+                transition-all duration-200
+              "
+            >
             {/* STATUS */}
             <span
               className={`
@@ -187,8 +209,8 @@ export default function AdminProjectsPage() {
                   onClick={() => openEdit(p)}
                   className="
                     rounded-lg border border-border
-                    p-2 transition
-                    hover:bg-accent
+                    p-2 transition cursor-pointer
+                    hover:bg-accent hover:scale-105 active:scale-95
                   "
                 >
                   <Edit size={16} />
@@ -198,8 +220,9 @@ export default function AdminProjectsPage() {
                   onClick={() => remove(p._id)}
                   className="
                     rounded-lg border border-destructive/40
-                    p-2 text-destructive
+                    p-2 text-destructive cursor-pointer
                     transition hover:bg-destructive/10
+                    hover:scale-105 active:scale-95
                   "
                 >
                   <Trash2 size={16} />
@@ -213,32 +236,44 @@ export default function AdminProjectsPage() {
                   className="
                     flex items-center gap-1
                     text-sm font-medium text-primary
-                    hover:underline
+                    hover:underline cursor-pointer
                   "
                 >
                   Visit <ExternalLink size={14} />
                 </a>
               )}
             </div>
-          </div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* MODAL */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur">
-          <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold">
-                {editing ? 'Edit Project' : 'Add Project'}
-              </h2>
-              <button
-                onClick={() => setOpen(false)}
-                className="rounded-lg p-1 hover:bg-accent"
-              >
-                <X />
-              </button>
-            </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-8"
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-xl font-bold">
+                  {editing ? 'Edit Project' : 'Add Project'}
+                </h2>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg p-1 hover:bg-accent cursor-pointer"
+                >
+                  <X />
+                </button>
+              </div>
 
             <div className="space-y-4">
               {[
@@ -295,18 +330,19 @@ export default function AdminProjectsPage() {
               <button
                 onClick={save}
                 className="
-                  w-full rounded-full
-                  bg-gradient-to-r from-primary to-[var(--electric-purple)]
+                  w-full rounded-full cursor-pointer
+                  bg-linear-to-r from-primary to-purple-600
                   py-3 font-semibold text-primary-foreground
-                  transition hover:opacity-90
+                  transition hover:opacity-90 hover:scale-105 active:scale-95
                 "
               >
                 Save Project
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

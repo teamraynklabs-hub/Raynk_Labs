@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Project from '@/lib/models/Project'
+import { requireAdmin } from '@/lib/auth/authGuard'
 
 /* ========= GET ========= */
 export async function GET() {
@@ -21,6 +22,7 @@ export async function GET() {
 /* ========= POST ========= */
 export async function POST(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const body = await req.json()
 
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
 /* ========= PUT ========= */
 export async function PUT(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const { id, title, desc, tech, url, status, icon } =
       await req.json()
@@ -99,6 +102,7 @@ export async function PUT(req: Request) {
 /* ========= DELETE (Soft) ========= */
 export async function DELETE(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const { id } = await req.json()
 

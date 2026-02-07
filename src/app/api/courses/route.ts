@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Course from '@/lib/models/Course'
+import { requireAdmin } from '@/lib/auth/authGuard'
 
 /* ======================
    GET → All courses
@@ -23,6 +24,7 @@ export async function GET() {
 ====================== */
 export async function POST(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
 
     const body = await req.json()
@@ -45,7 +47,10 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json(course, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'Invalid or expired token') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
     console.error('POST Course Error:', error)
     return NextResponse.json(
       { message: 'Failed to create course' },
@@ -59,6 +64,7 @@ export async function POST(req: Request) {
 ====================== */
 export async function PUT(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
 
     const body = await req.json()
@@ -98,7 +104,10 @@ export async function PUT(req: Request) {
     }
 
     return NextResponse.json(updated, { status: 200 })
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'Invalid or expired token') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
     console.error('PUT Course Error:', error)
     return NextResponse.json(
       { message: 'Failed to update course' },
@@ -112,6 +121,7 @@ export async function PUT(req: Request) {
 ====================== */
 export async function DELETE(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
 
     const { id } = await req.json()
@@ -136,7 +146,10 @@ export async function DELETE(req: Request) {
       { success: true, message: 'Course deleted successfully' },
       { status: 200 }
     )
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'Invalid or expired token') {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+    }
     console.error('DELETE Course Error:', error)
     return NextResponse.json(
       { message: 'Failed to delete course' },

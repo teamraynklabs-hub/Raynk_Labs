@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { uploadImage } from '@/lib/cloudinary'
+import { requireAdmin } from '@/lib/auth/authGuard'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
 export async function POST(req: Request) {
   try {
+    await requireAdmin()
     const formData = await req.formData()
     const file = formData.get('file') as File | null
 

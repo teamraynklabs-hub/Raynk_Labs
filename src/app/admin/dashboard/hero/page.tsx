@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Sparkles } from 'lucide-react'
 
 export default function AdminHeroPage() {
   const [data, setData] = useState<any>({
@@ -11,14 +13,20 @@ export default function AdminHeroPage() {
     secondaryBtn: { label: '', href: '' },
   })
 
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   /* ================= FETCH ================= */
   useEffect(() => {
+    setLoading(true)
     fetch('/api/hero')
       .then(res => res.json())
-      .then(d => d && setData(d))
+      .then(d => {
+        if (d) setData(d)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
   /* ================= SAVE ================= */
@@ -53,25 +61,42 @@ export default function AdminHeroPage() {
   }
 
   /* ================= UI ================= */
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-4xl space-y-10">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold">Hero Section</h1>
-        <p className="mt-1 text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Hero Section
+          </h1>
+          <Sparkles className="text-primary" size={28} />
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage main landing page headline and rotating text
         </p>
       </div>
 
       {/* ERROR */}
       {error && (
-        <div className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/40">
           {error}
         </div>
       )}
 
       {/* FORM */}
-      <div className="space-y-6">
+      <div className="rounded-2xl border border-border/50 bg-card/50 p-6 space-y-6 shadow-sm">
         {/* TITLE */}
         <div>
           <label className="mb-2 block text-sm font-medium">
@@ -147,21 +172,21 @@ export default function AdminHeroPage() {
       </div>
 
       {/* ACTION */}
-      <div className="pt-4">
+      <div className="flex justify-end">
         <button
           onClick={save}
           disabled={saving}
           className="
             cursor-pointer rounded-full
-            bg-primary px-10 py-3
+            bg-linear-to-r from-primary to-purple-600 px-10 py-3
             font-semibold text-primary-foreground
-            transition hover:opacity-90
-            disabled:opacity-60
+            transition hover:opacity-90 hover:scale-105 active:scale-95
+            disabled:opacity-60 disabled:cursor-not-allowed
           "
         >
           {saving ? 'Saving...' : 'Save Hero Section'}
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }

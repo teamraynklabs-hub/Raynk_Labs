@@ -8,7 +8,7 @@ import { signJWT } from '@/lib/auth/jwt';
 import { optionalAuth } from '@/server/middlewares';
 import { handleApiError } from './base.controller';
 import { authConfig } from '@/server/config';
-import { adminLoginSchema } from '@/server/schemas';
+import { superAdminLoginSchema } from '@/server/schemas';
 import { UnauthorizedError } from '@/server/utils/errors';
 
 export class AuthController {
@@ -20,7 +20,7 @@ export class AuthController {
   static async login(req: Request): Promise<NextResponse> {
     try {
       const body = await req.json();
-      const { email, password } = adminLoginSchema.parse(body);
+      const { email, password } = superAdminLoginSchema.parse(body);
 
       // Validate against environment variables (backward compat)
       const adminEmail = authConfig.adminEmail;

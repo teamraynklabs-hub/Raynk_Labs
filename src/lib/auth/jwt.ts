@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export interface AdminJWTPayload {
   adminId: string
   email: string
-  role: 'admin'
+  role: 'admin' | 'super-admin'
 }
 
 /* =========================

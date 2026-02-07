@@ -116,19 +116,21 @@ export default function AdminSoftwaresPage() {
 
   /* ================= UI ================= */
   return (
-    <div className="space-y-10 max-w-6xl">
+    <div className="space-y-6">
       {/* HEADER */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Softwares</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Softwares
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Manage all downloadable tools
           </p>
         </div>
 
         <button
           onClick={openAdd}
-          className="rounded-full cursor-pointer bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90 transition"
+          className="rounded-full cursor-pointer bg-linear-to-r from-primary to-purple-600 px-6 py-3 font-semibold text-primary-foreground hover:opacity-90 transition hover:scale-105 active:scale-95"
         >
           <Plus size={16} className="inline mr-1" />
           Add Software
@@ -136,28 +138,33 @@ export default function AdminSoftwaresPage() {
       </div>
 
       {/* LOADING */}
-      {loading && (
-        <div className="flex justify-center">
-          <Loader2 className="animate-spin text-primary" size={32} />
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
-      )}
-
-      {/* GRID */}
-      {!loading && (
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      ) : softwares.length === 0 ? (
+        <div className="text-center py-16 rounded-xl border border-border/50 bg-card/50">
+          <FileText className="mx-auto text-muted-foreground mb-4" size={48} />
+          <h3 className="text-lg font-semibold mb-2">No software found</h3>
+          <p className="text-sm text-muted-foreground">
+            Get started by adding your first software
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {softwares.map((s, i) => {
             const imageUrl = s.image?.url?.trim() || null
 
             return (
               <motion.div
                 key={s._id}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 className="
                   group relative overflow-hidden
-                  rounded-2xl border border-border bg-card p-6
-                  transition hover:-translate-y-1 hover:shadow-2xl
+                  rounded-2xl border border-border/50 bg-card/50 p-6
+                  shadow-sm hover:shadow-md transition-all duration-200
                 "
               >
                 {/* IMAGE */}
@@ -184,7 +191,7 @@ export default function AdminSoftwaresPage() {
                 <a
                   href={normalizeUrl(s.downloadUrl)}
                   target="_blank"
-                  className="mt-3 inline-flex items-center gap-1 text-xs text-primary"
+                  className="mt-3 inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
                 >
                   Open <ExternalLink size={14} />
                 </a>
@@ -193,7 +200,7 @@ export default function AdminSoftwaresPage() {
                 <div className="mt-5 flex gap-2">
                   <button
                     onClick={() => openEdit(s)}
-                    className="flex-1 rounded-lg border cursor-pointer px-3 py-2 hover:bg-accent transition"
+                    className="flex-1 rounded-lg border cursor-pointer px-3 py-2 hover:bg-accent transition hover:scale-105 active:scale-95"
                   >
                     <Edit size={16} className="inline mr-1" />
                     Edit
@@ -201,7 +208,7 @@ export default function AdminSoftwaresPage() {
 
                   <button
                     onClick={() => remove(s._id)}
-                    className="flex-1 rounded-lg border cursor-pointer border-destructive/40 px-3 py-2 text-destructive hover:bg-destructive/10 transition"
+                    className="flex-1 rounded-lg border cursor-pointer border-destructive/40 px-3 py-2 text-destructive hover:bg-destructive/10 transition hover:scale-105 active:scale-95"
                   >
                     <Trash2 size={16} className="inline mr-1" />
                     Delete
@@ -216,12 +223,16 @@ export default function AdminSoftwaresPage() {
       {/* MODAL */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-card p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg rounded-2xl bg-card p-6 border border-border"
+          >
             <div className="mb-4 flex justify-between">
               <h2 className="text-xl font-bold">
                 {editing ? 'Edit Software' : 'Add Software'}
               </h2>
-              <button className='cursor-pointer' onClick={() => setOpen(false)}>
+              <button className='cursor-pointer hover:bg-accent rounded-lg p-1 transition' onClick={() => setOpen(false)}>
                 <X />
               </button>
             </div>
@@ -265,12 +276,12 @@ export default function AdminSoftwaresPage() {
 
               <button
                 onClick={save}
-                className="w-full rounded-full cursor-pointer bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90 transition"
+                className="w-full rounded-full cursor-pointer bg-linear-to-r from-primary to-purple-600 py-3 font-semibold text-primary-foreground hover:opacity-90 transition hover:scale-105 active:scale-95"
               >
                 Save Software
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

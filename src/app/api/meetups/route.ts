@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import Meetup from '@/lib/models/Meetup'
+import { requireAdmin } from '@/lib/auth/authGuard'
 
 /* =========================
    GET → Read all meetups
@@ -27,6 +28,7 @@ export async function GET() {
 ========================= */
 export async function POST(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const body = await req.json()
 
@@ -69,6 +71,7 @@ export async function POST(req: Request) {
 ========================= */
 export async function PUT(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const body = await req.json()
 
@@ -112,6 +115,7 @@ export async function PUT(req: Request) {
 ========================= */
 export async function DELETE(req: Request) {
   try {
+    await requireAdmin()
     await connectDB()
     const { id } = await req.json()
 
