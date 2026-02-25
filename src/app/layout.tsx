@@ -3,6 +3,19 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 import AlertProvider from '@/components/cards/AlertProvider'
 import ClientLayout from './ClientLayout'
+import { Cormorant_Garamond, Inter } from 'next/font/google'
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-heading',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-body',
+})
 
 export const metadata: Metadata = {
   title: 'RaYnk Labs — Learn • Earn • Grow • Innovate',
@@ -36,7 +49,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${cormorant.variable} ${inter.variable} antialiased`}>
         <AlertProvider>
           <ThemeProvider>
             <ClientLayout>{children}</ClientLayout>

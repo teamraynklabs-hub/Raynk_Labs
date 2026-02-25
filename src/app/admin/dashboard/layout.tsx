@@ -24,6 +24,9 @@ import {
   Package,
   UserPlus,
   CheckSquare,
+  Navigation,
+  ImageIcon,
+  PanelBottom,
 } from 'lucide-react'
 import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext'
 import NotificationCenter from '@/components/NotificationCenter'
@@ -45,6 +48,9 @@ const menuItems = [
   { title: 'Meetups', href: '/admin/dashboard/meetups', icon: Calendar, superAdminOnly: false },
   { title: 'Hero', href: '/admin/dashboard/hero', icon: Home, superAdminOnly: false },
   { title: 'About', href: '/admin/dashboard/about', icon: FileText, superAdminOnly: false },
+  { title: 'Navbar', href: '/admin/dashboard/navbar', icon: Navigation, superAdminOnly: false },
+  { title: 'Logo', href: '/admin/dashboard/logo', icon: ImageIcon, superAdminOnly: false },
+  { title: 'Footer', href: '/admin/dashboard/footer', icon: PanelBottom, superAdminOnly: false },
 ]
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -110,7 +116,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="flex min-h-screen bg-linear-to-br from-background via-background to-muted/20">
       {/* ================= SIDEBAR ================= */}
       <aside
         ref={sidebarRef}
@@ -124,7 +130,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         `}
       >
         {/* HEADER */}
-        <div className="flex h-16 items-center justify-between border-b border-border/50 px-5 bg-gradient-to-r from-primary/5 to-purple-500/5">
+        <div className="flex h-16 items-center justify-between border-b border-border/50 px-5 bg-linear-to-r from-primary/5 to-ring/5">
           <Link
             href="/"
             className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
@@ -139,7 +145,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
         {/* USER INFO */}
         <div className="p-4 border-b border-border/50">
-          <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 p-3">
+          <div className="flex items-center gap-3 rounded-xl bg-linear-to-r from-primary/10 to-ring/10 p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary">
               <User size={20} />
             </div>
@@ -147,7 +153,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-semibold truncate">{user.email}</p>
               <div className="flex items-center gap-1 mt-0.5">
                 {user.role === 'super-admin' && (
-                  <Shield size={12} className="text-yellow-500" />
+                  <Shield size={12} className="text-warning" />
                 )}
                 <p className="text-xs text-muted-foreground capitalize">
                   {user.role === 'super-admin' ? 'Super Admin' : 'Admin'}
@@ -173,7 +179,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                   transition-all duration-200 cursor-pointer
                   ${
                     active
-                      ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg shadow-primary/30 scale-[1.02]'
+                      ? 'bg-linear-to-r from-primary to-ring text-white shadow-lg shadow-primary/30 scale-[1.02]'
                       : 'text-muted-foreground hover:bg-primary/10 hover:text-foreground hover:scale-[1.01]'
                   }
                 `}
@@ -181,7 +187,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 <Icon size={18} className={`group-hover:scale-110 transition-transform ${active ? 'animate-pulse' : ''}`} />
                 <span className="flex-1">{item.title}</span>
                 {item.superAdminOnly && (
-                  <Shield size={14} className="text-yellow-500/70" />
+                  <Shield size={14} className="text-warning/70" />
                 )}
               </Link>
             )
@@ -211,7 +217,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             {open ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <span className="text-sm font-semibold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+          <span className="text-sm font-semibold bg-linear-to-r from-primary to-ring bg-clip-text text-transparent">
             RaYnk Labs Admin
           </span>
 
@@ -230,7 +236,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
             {userMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
-                <div className="p-3 border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
+                <div className="p-3 border-b border-border/50 bg-linear-to-r from-primary/5 to-ring/5">
                   <p className="text-xs font-semibold truncate">{user.email}</p>
                   <p className="text-xs text-muted-foreground capitalize mt-0.5">
                     {user.role === 'super-admin' ? 'Super Admin' : 'Admin'}
