@@ -79,32 +79,6 @@ CLOUDINARY_API_SECRET=your-cloudinary-api-secret
 
 ## Optional Variables
 
-### Security Settings
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MAX_LOGIN_ATTEMPTS` | Failed logins before lockout | `5` |
-| `LOCKOUT_DURATION_MINUTES` | Account lockout duration | `15` |
-
-```env
-# Account Lockout
-MAX_LOGIN_ATTEMPTS=5
-LOCKOUT_DURATION_MINUTES=15
-```
-
-### OTP Configuration
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OTP_LENGTH` | Length of OTP code | `6` |
-| `OTP_EXPIRY_MINUTES` | OTP validity duration | `10` |
-
-```env
-# OTP Settings
-OTP_LENGTH=6
-OTP_EXPIRY_MINUTES=10
-```
-
 ### Rate Limiting
 
 | Variable | Description | Default |
@@ -158,14 +132,6 @@ SUPER_ADMIN_PASSWORD=your-super-secure-founder-password
 # ============================================
 # SECURITY
 # ============================================
-# Account Lockout
-MAX_LOGIN_ATTEMPTS=5
-LOCKOUT_DURATION_MINUTES=15
-
-# OTP Configuration
-OTP_LENGTH=6
-OTP_EXPIRY_MINUTES=10
-
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100

@@ -76,9 +76,6 @@ Handles admin authentication, signup, approval workflow, and profile management.
 | `getPendingRequests()` | Super Admin | Get admins pending approval |
 | `processApproval(data, processedBy)` | Super Admin | Approve/reject/suspend admin |
 | `updateProfile(adminId, data, image?)` | Protected | Update admin profile |
-| `requestPasswordChangeOTP(mobile)` | Protected | Request OTP for password change |
-| `verifyOTP(mobile, otp)` | Protected | Verify OTP |
-| `changePassword(mobile, current, new, otp)` | Protected | Change password with OTP |
 | `delete(adminId)` | Super Admin | Soft delete admin |
 | `getTaskStats()` | Super Admin | Get task completion ranking |
 
@@ -101,12 +98,6 @@ Regular Admin Login:
                     │ Generate JWT     │
                     └──────────────────┘
 ```
-
-#### Account Lockout
-
-- Max attempts: `MAX_LOGIN_ATTEMPTS` (default: 5)
-- Lockout duration: `LOCKOUT_DURATION_MINUTES` (default: 15)
-- Resets on successful login
 
 #### Example Usage
 

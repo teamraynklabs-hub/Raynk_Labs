@@ -405,57 +405,6 @@ Content-Type: application/json
 
 ---
 
-## Password Endpoints
-
-### POST /api/admin/password
-
-Request OTP for password change.
-
-```json
-// Request
-POST /api/admin/password
-
-// Response (200 OK)
-{
-  "success": true,
-  "message": "OTP sent successfully"
-}
-```
-
----
-
-### PUT /api/admin/password
-
-Change password with OTP verification.
-
-```json
-// Request
-PUT /api/admin/password
-Content-Type: application/json
-
-{
-  "currentPassword": "OldPassword@123",
-  "newPassword": "NewPassword@456",
-  "confirmNewPassword": "NewPassword@456",
-  "otp": "123456"
-}
-
-// Response (200 OK)
-{
-  "success": true,
-  "message": "Password changed successfully"
-}
-
-// Error Response (400)
-{
-  "success": false,
-  "message": "Invalid OTP",
-  "code": "VALIDATION_ERROR"
-}
-```
-
----
-
 ## Task Endpoints
 
 ### GET /api/admin/tasks

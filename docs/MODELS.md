@@ -45,15 +45,11 @@ The Admin model handles all admin user data including authentication, profile, a
 | `status` | String | No | `'pending'` | `'pending'`, `'approved'`, `'rejected'`, `'suspended'` |
 | `profile` | Object | No | `{}` | Profile information (see below) |
 | `lastLogin` | Date | No | - | Last login timestamp |
-| `loginAttempts` | Number | No | `0` | Failed login attempts |
-| `lockUntil` | Date | No | - | Account lock expiry |
 | `approvedBy` | ObjectId | No | - | Admin who approved |
 | `approvedAt` | Date | No | - | Approval timestamp |
 | `rejectedBy` | ObjectId | No | - | Admin who rejected |
 | `rejectedAt` | Date | No | - | Rejection timestamp |
 | `rejectionReason` | String | No | - | Reason for rejection |
-| `otp` | String | No | - | OTP for password reset |
-| `otpExpiry` | Date | No | - | OTP expiry timestamp |
 | `isActive` | Boolean | No | `true` | Soft delete flag |
 
 #### Profile Sub-Schema
@@ -76,10 +72,6 @@ The Admin model handles all admin user data including authentication, profile, a
 - `isActive`
 - `createdAt` (descending)
 
-#### Virtual Properties
-
-- `isLocked`: Returns `true` if account is locked
-
 #### Example Document
 
 ```json
@@ -94,7 +86,6 @@ The Admin model handles all admin user data including authentication, profile, a
     "github": "johndoe",
     "linkedin": "john-doe"
   },
-  "loginAttempts": 0,
   "isActive": true,
   "createdAt": "2024-01-15T10:30:00.000Z",
   "updatedAt": "2024-01-15T10:30:00.000Z"

@@ -26,11 +26,9 @@ import {
   NotFoundError,
   UnauthorizedError,
   ConflictError,
-  ValidationError,
   ForbiddenError,
 } from '@/server/utils/errors';
 import type { CloudinaryImage } from '@/types';
-import { sendOtpEmail } from '@/lib/email';
 
 // ============================================
 // TYPES
@@ -78,18 +76,6 @@ function toAdminPublic(admin: AdminDocument): AdminPublic {
     createdAt: admin.createdAt,
     updatedAt: admin.updatedAt,
   };
-}
-
-function generateOTP(): string {
-  const otpLength = parseInt(process.env.OTP_LENGTH || '6', 10);
-  return Math.floor(Math.random() * Math.pow(10, otpLength))
-    .toString()
-    .padStart(otpLength, '0');
-}
-
-function getOTPExpiry(): Date {
-  const expiryMinutes = parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10);
-  return new Date(Date.now() + expiryMinutes * 60 * 1000);
 }
 
 // ============================================
@@ -157,15 +143,6 @@ class AdminService {
       throw new UnauthorizedError('Invalid mobile number or password');
     }
 
-    // Check if account is locked
-    if (admin.isLocked) {
-      const lockUntil = admin.lockUntil!;
-      const remainingMinutes = Math.ceil((lockUntil.getTime() - Date.now()) / 60000);
-      throw new ForbiddenError(
-        `Account locked. Try again in ${remainingMinutes} minutes`
-      );
-    }
-
     // Check admin status
     if (admin.status === AdminStatus.PENDING) {
       throw new ForbiddenError('Your account is pending approval');
@@ -180,15 +157,11 @@ class AdminService {
     // Verify password
     const isPasswordValid = await comparePassword(password, admin.password);
     if (!isPasswordValid) {
-      // Increment login attempts
-      await this.incrementLoginAttempts(admin._id.toString());
       throw new UnauthorizedError('Invalid mobile number or password');
     }
 
-    // Reset login attempts and update last login
+    // Update last login
     await Admin.findByIdAndUpdate(admin._id, {
-      loginAttempts: 0,
-      lockUntil: null,
       lastLogin: new Date(),
     });
 
@@ -204,26 +177,6 @@ class AdminService {
       token,
       isSuperAdmin: false,
     };
-  }
-
-  /**
-   * Increment login attempts and lock if necessary
-   */
-  private async incrementLoginAttempts(adminId: string): Promise<void> {
-    const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
-    const lockoutMinutes = parseInt(process.env.LOCKOUT_DURATION_MINUTES || '15', 10);
-
-    const admin = await Admin.findById(adminId);
-    if (!admin) return;
-
-    const attempts = admin.loginAttempts + 1;
-    const updates: Partial<AdminDocument> = { loginAttempts: attempts };
-
-    if (attempts >= maxAttempts) {
-      updates.lockUntil = new Date(Date.now() + lockoutMinutes * 60 * 1000);
-    }
-
-    await Admin.findByIdAndUpdate(adminId, updates);
   }
 
   /**
@@ -402,127 +355,6 @@ class AdminService {
     }
 
     return toAdminPublic(updatedAdmin);
-  }
-
-  /**
-   * Request OTP for password change
-   */
-  async requestPasswordChangeOTP(mobile: string): Promise<{ message: string }> {
-    await connectDB();
-
-    const admin = await Admin.findOne({ mobile });
-    if (!admin) {
-      throw new NotFoundError('Admin');
-    }
-
-    // Get admin email from profile
-    const adminEmail = admin.profile?.email;
-    if (!adminEmail) {
-      throw new ValidationError(
-        'No email address found. Please update your profile with an email address.'
-      );
-    }
-
-    const otp = generateOTP();
-    const otpExpiry = getOTPExpiry();
-    const expiryMinutes = parseInt(process.env.OTP_EXPIRY_MINUTES || '10', 10);
-
-    await Admin.findByIdAndUpdate(admin._id, {
-      otp,
-      otpExpiry,
-    });
-
-    // Send OTP via email
-    const emailResult = await sendOtpEmail({
-      to: adminEmail,
-      otp,
-      expiryMinutes,
-    });
-
-    if (!emailResult.success) {
-      // Clear OTP from database if email failed
-      await Admin.findByIdAndUpdate(admin._id, {
-        otp: null,
-        otpExpiry: null,
-      });
-
-      throw new Error(
-        `Failed to send OTP email: ${emailResult.error || 'Unknown error'}`
-      );
-    }
-
-    // In development, also log OTP for easier testing
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[DEV] OTP for ${mobile} (${adminEmail}): ${otp}`);
-    }
-
-    return { message: 'OTP sent to your registered email address' };
-  }
-
-  /**
-   * Verify OTP
-   */
-  async verifyOTP(mobile: string, otp: string): Promise<boolean> {
-    await connectDB();
-
-    const admin = await Admin.findOne({ mobile });
-    if (!admin) {
-      throw new NotFoundError('Admin');
-    }
-
-    if (!admin.otp || !admin.otpExpiry) {
-      throw new ValidationError('No OTP request found');
-    }
-
-    if (new Date() > admin.otpExpiry) {
-      throw new ValidationError('OTP has expired');
-    }
-
-    if (admin.otp !== otp) {
-      throw new ValidationError('Invalid OTP');
-    }
-
-    return true;
-  }
-
-  /**
-   * Change password with OTP verification
-   */
-  async changePassword(
-    mobile: string,
-    currentPassword: string,
-    newPassword: string,
-    otp: string
-  ): Promise<{ message: string }> {
-    await connectDB();
-
-    const admin = await Admin.findOne({ mobile });
-    if (!admin) {
-      throw new NotFoundError('Admin');
-    }
-
-    // Verify OTP
-    await this.verifyOTP(mobile, otp);
-
-    // Verify current password
-    const isCurrentPasswordValid = await comparePassword(
-      currentPassword,
-      admin.password
-    );
-    if (!isCurrentPasswordValid) {
-      throw new UnauthorizedError('Current password is incorrect');
-    }
-
-    // Hash and update new password
-    const hashedPassword = await hashPassword(newPassword);
-
-    await Admin.findByIdAndUpdate(admin._id, {
-      password: hashedPassword,
-      otp: null,
-      otpExpiry: null,
-    });
-
-    return { message: 'Password changed successfully' };
   }
 
   /**

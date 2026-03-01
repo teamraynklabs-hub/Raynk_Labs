@@ -56,11 +56,7 @@ export interface AdminDocument extends Document {
   // Profile (for Team Member Cards on public site)
   profile?: AdminProfile;
 
-  // Security & Login Tracking
-  otp?: string;
-  otpExpiry?: Date;
-  loginAttempts: number;
-  lockUntil?: Date;
+  // Login Tracking
   lastLogin?: Date;
 
   // Approval Workflow
@@ -72,7 +68,6 @@ export interface AdminDocument extends Document {
 
   // Flags
   isActive: boolean;
-  isLocked: boolean;
 
   // Timestamps
   createdAt: Date;
@@ -151,21 +146,7 @@ const AdminSchema = new Schema<AdminDocument>(
       },
     },
 
-    // Security & Login Tracking
-    otp: {
-      type: String,
-    },
-    otpExpiry: {
-      type: Date,
-    },
-    loginAttempts: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    lockUntil: {
-      type: Date,
-    },
+    // Login Tracking
     lastLogin: {
       type: Date,
     },
@@ -195,10 +176,6 @@ const AdminSchema = new Schema<AdminDocument>(
       type: Boolean,
       default: true,
     },
-    isLocked: {
-      type: Boolean,
-      default: false,
-    },
   },
   {
     timestamps: true,
@@ -216,23 +193,12 @@ AdminSchema.index({ isActive: 1 });
 AdminSchema.index({ 'profile.email': 1 });
 
 // ============================================
-// VIRTUALS
-// ============================================
-
-// Check if account is currently locked
-AdminSchema.virtual('isCurrentlyLocked').get(function (this: AdminDocument) {
-  return this.lockUntil ? this.lockUntil > new Date() : false;
-});
-
-// ============================================
 // METHODS
 // ============================================
 
 AdminSchema.methods.toPublicJSON = function () {
   const admin = this.toObject();
   delete admin.password;
-  delete admin.otp;
-  delete admin.otpExpiry;
   return admin;
 };
 

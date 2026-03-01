@@ -6,14 +6,12 @@ import {
   User,
   Mail,
   Phone,
-  Lock,
   Github,
   Instagram,
   Linkedin,
   Globe,
   Camera,
   Save,
-  ShieldCheck,
 } from 'lucide-react'
 import { useAdminAuth } from '@/contexts/AdminAuthContext'
 import { useRouter } from 'next/navigation'
@@ -48,17 +46,6 @@ export default function AdminProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  // Password change state
-  const [showPasswordForm, setShowPasswordForm] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: '',
-    otp: '',
-  })
-  const [otpSent, setOtpSent] = useState(false)
-  const [sendingOtp, setSendingOtp] = useState(false)
 
   // Image upload state
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -158,79 +145,6 @@ export default function AdminProfilePage() {
       }
     } catch (err) {
       setError('Failed to update profile')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function requestOtp() {
-    try {
-      setSendingOtp(true)
-      setError('')
-
-      const res = await fetch('/api/admin/password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ mobile: profileData.mobile }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        setOtpSent(true)
-        setSuccess(data.message || 'OTP sent to your registered email')
-      } else {
-        setError(data.message || 'Failed to send OTP')
-      }
-    } catch (err) {
-      setError('Failed to send OTP')
-    } finally {
-      setSendingOtp(false)
-    }
-  }
-
-  async function changePassword() {
-    try {
-      setSaving(true)
-      setError('')
-      setSuccess('')
-
-      if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
-        setError('New passwords do not match')
-        return
-      }
-
-      const res = await fetch('/api/admin/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          mobile: profileData.mobile,
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-          confirmNewPassword: passwordForm.confirmNewPassword,
-          otp: passwordForm.otp,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        setSuccess(data.message || 'Password changed successfully')
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmNewPassword: '',
-          otp: '',
-        })
-        setShowPasswordForm(false)
-        setOtpSent(false)
-      } else {
-        setError(data.message || 'Failed to change password')
-      }
-    } catch (err) {
-      setError('Failed to change password')
     } finally {
       setSaving(false)
     }
@@ -511,186 +425,6 @@ export default function AdminProfilePage() {
         </div>
       </div>
 
-      {/* PASSWORD CHANGE SECTION */}
-      <div className="rounded-2xl border border-border/50 bg-card/50 p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Lock className="text-yellow-500" size={20} />
-            <h2 className="font-semibold text-lg">Password & Security</h2>
-          </div>
-          {!showPasswordForm && (
-            <button
-              onClick={() => setShowPasswordForm(true)}
-              className="text-sm text-primary hover:underline cursor-pointer"
-            >
-              Change Password
-            </button>
-          )}
-        </div>
-
-        {showPasswordForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="space-y-4 pt-4 border-t border-border"
-          >
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-              <ShieldCheck className="text-yellow-500 mt-0.5" size={18} />
-              <div className="text-sm text-yellow-600 dark:text-yellow-400">
-                <p className="font-semibold">OTP Verification Required</p>
-                <p className="text-xs mt-1">
-                  An OTP will be sent to your registered email for verification
-                </p>
-              </div>
-            </div>
-
-            {/* Current Password */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={passwordForm.currentPassword}
-                onChange={(e) =>
-                  setPasswordForm({
-                    ...passwordForm,
-                    currentPassword: e.target.value,
-                  })
-                }
-                className={inputClass}
-                placeholder="Enter current password"
-              />
-            </div>
-
-            {/* New Password */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={passwordForm.newPassword}
-                onChange={(e) =>
-                  setPasswordForm({
-                    ...passwordForm,
-                    newPassword: e.target.value,
-                  })
-                }
-                className={inputClass}
-                placeholder="Enter new password"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Min 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special
-                char
-              </p>
-            </div>
-
-            {/* Confirm New Password */}
-            <div>
-              <label className="text-sm font-semibold mb-2 block">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={passwordForm.confirmNewPassword}
-                onChange={(e) =>
-                  setPasswordForm({
-                    ...passwordForm,
-                    confirmNewPassword: e.target.value,
-                  })
-                }
-                className={inputClass}
-                placeholder="Confirm new password"
-              />
-            </div>
-
-            {/* OTP Section */}
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-sm font-semibold mb-2 block">
-                  OTP Code
-                </label>
-                <input
-                  type="text"
-                  value={passwordForm.otp}
-                  onChange={(e) =>
-                    setPasswordForm({
-                      ...passwordForm,
-                      otp: e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                  placeholder="Enter 6-digit OTP"
-                  maxLength={6}
-                  disabled={!otpSent}
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={requestOtp}
-                  disabled={sendingOtp || otpSent}
-                  className="
-                    rounded-lg px-6 py-3 cursor-pointer
-                    bg-primary/10 text-primary border border-primary/20
-                    hover:bg-primary/20 transition
-                    disabled:opacity-60 disabled:cursor-not-allowed
-                    text-sm font-semibold whitespace-nowrap
-                  "
-                >
-                  {sendingOtp ? 'Sending...' : otpSent ? 'OTP Sent' : 'Send OTP'}
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 justify-end pt-2">
-              <button
-                onClick={() => {
-                  setShowPasswordForm(false)
-                  setPasswordForm({
-                    currentPassword: '',
-                    newPassword: '',
-                    confirmNewPassword: '',
-                    otp: '',
-                  })
-                  setOtpSent(false)
-                  setError('')
-                  setSuccess('')
-                }}
-                className="
-                  px-6 py-2 rounded-lg cursor-pointer
-                  border border-border hover:bg-accent
-                  transition text-sm font-medium
-                "
-              >
-                Cancel
-              </button>
-              <button
-                onClick={changePassword}
-                disabled={
-                  saving ||
-                  !passwordForm.currentPassword ||
-                  !passwordForm.newPassword ||
-                  !passwordForm.confirmNewPassword ||
-                  !passwordForm.otp
-                }
-                className="
-                  flex items-center gap-2 px-6 py-2 rounded-lg cursor-pointer
-                  bg-linear-to-r from-primary to-purple-600
-                  text-primary-foreground font-semibold
-                  transition hover:opacity-90 hover:scale-105 active:scale-95
-                  disabled:opacity-60 disabled:cursor-not-allowed
-                  text-sm
-                "
-              >
-                <Lock size={16} />
-                {saving ? 'Changing...' : 'Change Password'}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </div>
     </motion.div>
   )
 }

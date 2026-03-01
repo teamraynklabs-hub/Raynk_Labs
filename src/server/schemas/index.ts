@@ -99,32 +99,6 @@ export const adminProfileUpdateSchema = z.object({
 
 export type AdminProfileUpdateInput = z.infer<typeof adminProfileUpdateSchema>;
 
-// Admin password change schema
-export const adminPasswordChangeSchema = z.object({
-  currentPassword: z
-    .string()
-    .min(1, 'Current password is required'),
-  newPassword: z
-    .string()
-    .min(8, 'New password must be at least 8 characters')
-    .regex(
-      strongPasswordRegex,
-      'Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character'
-    ),
-  confirmNewPassword: z
-    .string()
-    .min(1, 'Confirm new password is required'),
-  otp: z
-    .string()
-    .min(6, 'OTP must be 6 digits')
-    .max(6, 'OTP must be 6 digits'),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmNewPassword'],
-});
-
-export type AdminPasswordChangeInput = z.infer<typeof adminPasswordChangeSchema>;
-
 // Admin approval/rejection schema
 export const adminApprovalSchema = z.object({
   adminId: mongoIdSchema,
@@ -133,20 +107,6 @@ export const adminApprovalSchema = z.object({
 });
 
 export type AdminApprovalInput = z.infer<typeof adminApprovalSchema>;
-
-// OTP verification schema
-export const otpVerifySchema = z.object({
-  mobile: z
-    .string()
-    .min(1, 'Mobile number is required')
-    .regex(indianMobileRegex, 'Invalid Indian mobile number'),
-  otp: z
-    .string()
-    .min(6, 'OTP must be 6 digits')
-    .max(6, 'OTP must be 6 digits'),
-});
-
-export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
 
 // ============================================
 // COURSE SCHEMAS

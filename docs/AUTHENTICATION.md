@@ -377,36 +377,6 @@ return response;
 
 ## Security Features
 
-### Account Lockout
-
-Protects against brute force attacks.
-
-| Setting | Environment Variable | Default |
-|---------|---------------------|---------|
-| Max Attempts | `MAX_LOGIN_ATTEMPTS` | 5 |
-| Lockout Duration | `LOCKOUT_DURATION_MINUTES` | 15 minutes |
-
-**Flow:**
-```
-Login Attempt Failed
-        │
-        ▼
-Increment loginAttempts
-        │
-        ▼
-┌───────────────────────────────────┐
-│ loginAttempts >= MAX_ATTEMPTS?    │
-└───────────────────┬───────────────┘
-                    │
-        ┌───────────┴───────────┐
-        │ YES                   │ NO
-        ▼                       ▼
-┌───────────────────┐   ┌───────────────────┐
-│ Set lockUntil     │   │ Allow retry       │
-│ (current + 15min) │   │                   │
-└───────────────────┘   └───────────────────┘
-```
-
 ### Admin Status Checks
 
 Regular admins must have `status: 'approved'` to log in.
@@ -417,26 +387,6 @@ Regular admins must have `status: 'approved'` to log in.
 | `approved` | Yes | - |
 | `rejected` | No | "Your account has been rejected" |
 | `suspended` | No | "Your account has been suspended" |
-
-### OTP for Password Change
-
-Password changes require OTP verification.
-
-| Setting | Environment Variable | Default |
-|---------|---------------------|---------|
-| OTP Length | `OTP_LENGTH` | 6 digits |
-| OTP Expiry | `OTP_EXPIRY_MINUTES` | 10 minutes |
-
-**Flow:**
-```
-Request OTP → Generate 6-digit OTP → Store in DB → Send via SMS
-        │
-        ▼
-Enter OTP + Current Password + New Password
-        │
-        ▼
-Verify OTP → Verify Current Password → Hash New Password → Update
-```
 
 ---
 
@@ -491,20 +441,6 @@ POST /api/admin/logout
 ```http
 GET /api/admin/profile
 Cookie: admin_token=...
-```
-
-### Change Password
-
-```http
-POST /api/admin/password
-Cookie: admin_token=...
-Content-Type: application/json
-
-{
-  "currentPassword": "OldPass123!",
-  "newPassword": "NewPass456!",
-  "otp": "123456"
-}
 ```
 
 ---
@@ -631,13 +567,6 @@ JWT_SECRET=your-256-bit-secret-key-here
 SUPER_ADMIN_EMAIL=founder@raynklabs.com
 SUPER_ADMIN_PASSWORD=your-super-secure-password
 
-# Security Settings
-MAX_LOGIN_ATTEMPTS=5
-LOCKOUT_DURATION_MINUTES=15
-
-# OTP Configuration
-OTP_LENGTH=6
-OTP_EXPIRY_MINUTES=10
 ```
 
 ---
